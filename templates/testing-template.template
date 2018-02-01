@@ -1,0 +1,63 @@
+// -*- mode:go-template -*-
+
+// Generated from {{.Filename}} {{.BuildTime}}
+
+#include <zmq.h>
+
+#include <cstdint>
+#include <string>
+#include <vector>
+
+{{range .Imports -}}
+#include "{{.}}.hpp"
+{{- end}}
+
+namespace {{.PackageName}}
+{
+
+// Typedefs
+{{range .Typedefs -}}
+typedef {{.Alias}} {{.Name}};
+{{- end}}
+
+// Constants
+{{range .Constants}}
+const {{cpptype .Type}} {{.Name}} = {{.Value}};
+{{- end}}
+
+// Array Types
+{{range .ArrayTypes}}
+{{if eq .Size 0}}typedef std::vector<{{.Type}}> {{.Name}};{{else}}typedef std::array<{{.Type}}, {{.Size}}> {{.Name}};{{end}}
+{{- end}}
+
+// Structs
+{{range .StructTypes}}
+{{end}}
+
+{{range .StructTypes}}
+struct {{.Name}}
+{
+    {{range .Fields}}
+    {{cpptype .Type}} _ {{.Name}} ;
+    {{end}}
+};
+{{end}}
+
+{{range .Interfaces}}
+  {{range .Methods}}
+    {{if .Results}}
+struct {{.Name}}_Result
+{
+      {{range $index, $arg := .Results}}
+        {{if $arg.Name}}
+    {{cpptype $arg.Type}} _{{$arg.Name}};
+        {{else}}
+    {{cpptype $arg.Type}} _r$index}};
+        {{end}}
+      {{- end}}
+    {{- end}}
+  {{- end}}
+};
+{{- end}}
+
+} // namespace {{.PackageName}}

@@ -1,0 +1,91 @@
+// -*- mode:go-template -*-
+
+// Generated from {{.Filename}} {{.BuildTime}}
+
+#include <array>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+{{- range .Imports -}}
+#include "{{.}}.hpp"
+{{- end}}
+
+namespace {{.PackageName}} {
+
+{{- if .Typedefs}}
+
+// Typedefs
+{{- range .Typedefs}}
+typedef {{cpptype .Alias}} {{.Name}};
+{{end}}
+{{- end}}
+
+{{- if .Constants}}
+
+// Constants
+
+{{- range .Constants}}
+const {{cpptype .Type}} {{.Name}} = {{.Value}};
+{{- end}}
+{{- end}}
+
+{{- if .ArrayTypes}}
+
+// Arrays
+
+{{- range .ArrayTypes}}
+{{if eq .Size 0}}typedef std::vector<{{cpptype .Type}}> {{.Name}};{{else}}typedef std::array<{{cpptype .Type}}, {{.Size}}> {{.Name}};{{end}}
+{{- end}}
+{{- end}}
+
+{{- if .StructTypes}}
+
+// Structs
+
+{{- range .StructTypes}}
+struct {{.Name}} {
+{{- range .Fields}}
+    {{cpptype .Type }} _{{.Name}};
+{{- end}}
+};
+{{end}}
+{{- end}}
+
+{{- if .Interfaces}}
+{{- range .Interfaces}}
+{{- range .Methods}}
+{{- if .Results}}
+{{$n := len .Results}}
+{{- if eq $n 1 -}}
+{{- else -}}
+struct {{.Name}}_Result {
+{{- range $index, $arg := .Results}}
+    {{cpptype $arg.Type}} _{{$arg.Name}};
+{{- end}}
+};
+{{end -}}
+{{- end}}
+{{- end}}
+{{- end}}
+
+{{- range .Interfaces}}
+
+class {{.Name}} {
+public:
+    {{.Name}}();
+    virtual ~{{.Name}}();
+{{- range .Methods}}
+    virtual
+{{- if .Results -}}
+{{- $n := len .Results}}
+ {{if eq $n 1}}{{$val := index .Results 0}}{{cpptype $val.Type}}{{else}}{{.Name}}_Result{{end -}}
+{{else}}
+ void
+{{- end}} {{.Name}}({{- range $index, $arg := .Args}}{{if eq $index 0}}{{else}}, {{end}}{{argtype $arg.Type}} {{$arg.Name}}{{end}}) = 0;
+{{- end}}
+};
+{{- end}}
+{{- end}}
+
+} // namespace {{.PackageName}}

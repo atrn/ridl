@@ -1,0 +1,56 @@
+// -*- mode:go-template -*-
+// ridl: output:"%s.h"
+
+// Generated from {{.Filename}} {{.BuildTime}}
+
+// #include <zmq.h>
+
+#include <array>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <vector>
+{{range .Imports -}}
+#include "{{.}}.hpp"
+{{- end}}
+namespace {{.PackageName}}
+{
+
+{{range .Typedefs}}typedef {{.Alias}} {{.Name}};
+{{end}}
+{{range .Constants}}const {{cpptype .Type}} {{.Name}} = {{.Value}};
+{{end}}
+{{range .ArrayTypes}}{{if eq .Size 0}}typedef std::vector<{{cpptype .Type}}> {{.Name}};{{else}}typedef std::array<{{cpptype .Type}}, {{.Size}}> {{.Name}};
+{{end}}
+{{end}}
+{{range .StructTypes}}
+struct {{.Name}}
+{
+    {{- range .Fields}}
+    {{cpptype .Type}} _{{.Name}};
+    {{- end}}
+};
+{{end}}
+{{range .Interfaces -}}{{- range .Methods}}{{if .Results}}{{$n:=len .Results}}
+{{if eq $n 1}}{{$r:=index .Results 0}}using {{.Name}}_Result = {{cpptype $r.Type}};{{else}}struct {{.Name}}_Result {
+{{- range $index, $arg := .Results}}{{if $arg.Name}}
+    {{cpptype $arg.Type}} _{{$arg.Name}};{{else}}
+    {{cpptype $arg.Type}} _r{{$index}};{{- end}}
+{{- end}}
+};
+{{end}}
+{{end}}{{- end}}{{- end}}
+{{- range .Interfaces}}
+class {{.Name}}
+{
+public:
+    {{.Name}}() {}
+    virtual ~{{.Name}}() {}
+{{- range .Methods}}
+    virtual {{if .Results}}{{.Name}}_Result{{else}}void{{end}} {{.Name}}({{- range $index, $arg := .Args}}{{if eq $index 0}}{{else}}, {{end -}}
+    {{argtype $arg.Type}} {{- end}}) = 0;
+{{- end}}
+};
+{{end}}
+} // namespace {{.PackageName}}
+

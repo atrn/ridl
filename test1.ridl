@@ -1,0 +1,23 @@
+// -*- mode:go -*-
+
+package xyz
+
+const (
+	Version   = 1234
+	Copyright = "Copyright (C) Fake Inc."
+)
+
+type Header struct {
+	Ver  uint8
+	Code uint8
+	Flg  uint8
+	Len  uint8
+}
+
+type API interface {
+	Signal()
+	Ping(string, int)
+	StoreNode(Header, [4]float64) (string, error)
+	StoreNodeNamedResults(Header, [4]float64) (name string, err error)
+	Resample([]float32, float32, float32) []float32
+}

@@ -1,0 +1,7 @@
+// -*- mode:go-template -*-
+
+Input:          {{.Filename}}
+Package:        {{.PackageName}}
+Run:            {{.BuildTime}}
+User:           {{.Username}}
+Host:           {{.Hostname}}

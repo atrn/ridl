@@ -1,0 +1,18 @@
+// -*- mode:go-template -*-
+
+// Generated from {{.Filename}} {{.BuildTime}}
+
+#include "{{basename .Filename}}.hpp"
+
+namespace {{.PackageName}}
+{
+
+{{range .Interfaces}}
+{{.Name}}::{{.Name}}() {
+}
+
+{{.Name}}::~{{.Name}}() {
+}
+{{end}}
+
+} // namespace {{.PackageName}}

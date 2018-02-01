@@ -1,0 +1,87 @@
+// -*- mode:go-template -*-
+
+Input:          {{.Filename}}
+Package:        {{.PackageName}}
+Run:            {{.BuildTime}}
+User:           {{.Username}}
+Host:           {{.Hostname}}
+
+{{if len .Imports}}
+--------------------------------------------------------------------------------
+
+Imports:{{range .Imports}}
+                {{.}}
+{{end}}
+{{end}}
+
+{{if len .Decls}}
+--------------------------------------------------------------------------------
+
+Decls:
+{{range .Decls -}}
+- {{.Name}} {{.GetType}} -> {{cpptype .GetType}}
+{{end}}
+{{end}}
+
+{{if len .Typedefs}}
+--------------------------------------------------------------------------------
+
+Typedefs:
+{{range .Typedefs -}}
+--------------------------------------------------------------------------------
+Name: {{.Name}}
+Type: {{.Type}}
+Alias: {{.Alias}}
+{{end}}
+{{end}}
+
+{{if len .ArrayTypes}}
+--------------------------------------------------------------------------------
+
+Array Types:
+{{range .ArrayTypes}}
+* Name: {{.Name}}
+Type:: {{.Type}}
+Size:: {{.Size}}
+{{end}}
+{{end}}
+
+{{if len .StructTypes}}
+--------------------------------------------------------------------------------
+
+Struct Types:
+{{range .StructTypes}}
+* Name: {{.Name}}
+{{range .Fields}}
+    Field: {{.Name}} {{.Type}}
+{{end}}
+{{end}}
+{{end}}
+
+{{if len .Interfaces}}
+--------------------------------------------------------------------------------
+
+Interfaces:
+{{range .Interfaces}}
+
+* Interface: {{.Name}}
+
+Methods:
+{{range .Methods}}
+Name: {{.Name}}
+Args:
+{{range .Args}}- '{{.Name}}' {{.Type}}
+{{end}}
+{{end}}
+{{end}}
+{{end}}
+
+{{if len .Constants}}
+--------------------------------------------------------------------------------
+
+Constants:
+
+{{range .Constants}}
+* Name: {{.Name}} {{.Type}} {{.Value}}
+{{end}}
+{{end}}
