@@ -4,33 +4,31 @@
 compiler. Of sorts. Compared to other tools that call themselves IDL
 compilers `ridl` stands out. Firstly because it does not use an
 interface definition language. And secondly because it doesn't
-actually _compile_ anything. ridl is an an _IDL compiler_ with
-no IDL, that doesn't compile. Sound good?
+actually _compile_ anything. ridl is an an _IDL compiler_ without
+an IDL, that it doesn't compile.
 
 ## What ridl does
 
 Instead of defining an IDL `ridl` uses an existing language, Go, and
-re-interprets type and constant declarations written in Go as
-definitions of _interfaces_. `ridl` parses Go code, using standard Go
-packages, builds a data structure to represent the entities defined by
-the code and then uses Go's standard template package to _execute_
-user-supplied template files using the data structure as the so-called
+re-interprets its constant and type declarations as definitions of
+_interfaces_. `ridl` parses the Go code, using standard Go packages,
+builds a data structure to represent the constants and types defined
+by the code, and then uses Go's standard template package to _execute_
+user-supplied templates using this data structure as the so-called
 _template context_. The result is a transformation of the Go
-declarations to whatever output is produced by the supplied templates.
-This is what, in ridl, passes for _compilation_.
+declarations to whatever is produced by the templates.
 
-## Templates
-
-The `ridl` source includes templates to convert Go decalrations to
-C++.
+ridl comes with some templates to demonstrate the approach. The
+primary template is used to convert the Go declarations to C++.  This
+is the first usage and ridl's initial features support this use.
 
 ## What ridl doesn't do
 
-Other languages are more expressive when it comes to data structuring
-and other details. Being based on Go and its syntax ridl has no unions
-nor does it provide any support for the versioning issue.
+Other IDLs and RPC or protocol description languages are more
+expressive. Being based on Go ridl has no unions and offers no direct
+support for interfsce versioning.
 
-### Missing features list
+### Missing features
 
 - no _union_ types
 - no _versioning_
