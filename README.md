@@ -1,52 +1,34 @@
-# Retargetable interface compiler
+# ridl - retargetable IDL compiler
 
 `ridl` (pronounced _riddle_) is an _Interface Description Language_
-compiler. Of sorts. Compared to other tools that call themselves IDL
+compiler. Of sorts. Compared with other tools that call themselves IDL
 compilers `ridl` stands out. Firstly because it does not use an
 interface definition language. And secondly because it doesn't
-actually _compile_ anything. ridl is an an _IDL compiler_ without
-an IDL, that it doesn't compile.
+actually _compile_ anything. ridl is an an _IDL compiler_. With no
+IDL. That it doesn't compile.
 
 ## What ridl does
 
 Instead of defining an IDL `ridl` uses an existing language, Go, and
-re-interprets its constant and type declarations as definitions of
-_interfaces_. `ridl` parses the Go code, using standard Go packages,
-builds a data structure to represent the constants and types defined
-by the code, and then uses Go's standard template package to _execute_
-user-supplied templates using this data structure as the so-called
-_template context_. The result is a transformation of the Go
-declarations to whatever is produced by the templates.
+re-interprets its constant and type declarations to be definitions of
+_interfaces_ (which, of course, they already are). `ridl` parses Go
+code, using standard Go packages, builds a data structure to represent
+the constants and types the code defines, and then uses Go's standard
+template package to _execute_ user-supplied templates with this data
+structure as the so-called _template context_. The result permits the
+Go declarations to transformed to whatever is produced by the
+templates.
 
-ridl comes with some templates to demonstrate the approach. The
-primary template is used to convert the Go declarations to C++.  This
-is the first usage and ridl's initial features support this use.
+ridl comes with example templates to convert Go declarations to C++.
+These will be developed to allow for network messaging, using
+different transports, with Go interface types defining sets of
+messages.
+
 
 ## What ridl doesn't do
 
-Other IDLs and RPC or protocol description languages are more
-expressive. Being based on Go ridl has no unions and offers no direct
+Being based on Go means ridl has no unions and offers no direct
 support for interfsce versioning.
-
-### Missing features
-
-- no _union_ types
-- no _versioning_
-
-## What is an interface?
-
-An _interface_ is a collection of constants, data structures and
-_messages_. Users use these to interact with some sort of _service_,
-typically sending and receiving the messages defined by the interfaces
-with the associated types and constant values.
-
-The specific manner in how this messaging occurs varies
-considerably. There are, and have been, numerous frameworks, systems
-and libraries to tackle this problem. Far too many to list
-here. However, regardless of the _encoding_ used by the underling
-system, and the message _transport_ (with whatever _addressing_ it
-uses) all have similar basic concerns about defining the constant
-values, types and messages used in the inteface.
 
 ## Interface Descriptions
 
@@ -100,14 +82,16 @@ files.
 The actual semantics of the messaging are not defined by `ridl` itself
 but depend on the underlying code generator and target environment.
 
-## Code Generation
+## Templates
 
-### Context Data Structure
+### Template Context
 
 ... define Context here so people can write templates!
 
 ### Template functions
 
 #### cpptype
+
 #### argtype
+
 #### basename
