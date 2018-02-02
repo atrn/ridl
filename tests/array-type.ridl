@@ -2,6 +2,7 @@
 
 package ridl_tests
 
+type IntPair [2]int
 type Vec [3]Coord
 type Samples []float32
 type Path []Point

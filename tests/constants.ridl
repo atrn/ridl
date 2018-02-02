@@ -3,8 +3,9 @@
 package ridl_tests
 
 // Simple constants with inferred types.
+
 const (
 	Release   = 1
-	Version   = 1234.567
+	Version   = 123.456
 	Copyright = "Copyright (C) Example Corp"
 )
