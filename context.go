@@ -46,6 +46,8 @@ type Context struct {
 	Constants []*ConstDecl
 }
 
+// NewContext returns a new Context for the given file and Package.
+//
 func NewContext(filename string, pkg *Package) *Context {
 	username := "unknown"
 	hostname := "localhost"

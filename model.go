@@ -152,10 +152,14 @@ func NewArrayDecl(name, typ string, size int) *ArrayDecl {
 	}
 }
 
+// Size returns the number of elements in the receiver.
+//
 func (a *ArrayDecl) Size() int {
 	return a.size
 }
 
+// ElemType returns the type of the elements.
+//
 func (a *ArrayDecl) ElemType() string {
 	return a.typ
 }
@@ -240,24 +244,33 @@ type StructFieldTag struct {
 
 //================================================================
 
+// MapDecl represents a map declaration.
+//
 type MapDecl struct {
 	basicDecl
 	keytyp string
 	valtyp string
 }
 
+// NewMapDecl returns a new MapDecl with the given name,
+// and key and value types.
+//
 func NewMapDecl(name, keytyp, valtyp string) *MapDecl {
 	return &MapDecl{
 		basicDecl: basicDecl{name},
-		keytyp:       keytyp,
-		valtyp: valtyp,
+		keytyp:    keytyp,
+		valtyp:    valtyp,
 	}
 }
 
+// KeyType returns the type, as a string, of the receiver's keys.
+//
 func (decl *MapDecl) KeyType() string {
 	return decl.keytyp
 }
 
+// Type returns the type of the receiver's values.
+//
 func (decl *MapDecl) Type() string {
 	return decl.valtyp
 }
@@ -314,7 +327,7 @@ type Method struct {
 	Results []*MethodArg
 }
 
-// NewMethodName returns a new Method with the given name, arguments
+// NewMethod returns a new Method with the given name, arguments
 // and results.
 //
 func NewMethod(name string, args []*MethodArg, results []*MethodArg) *Method {

@@ -47,15 +47,13 @@ func cpptype(fullType string, asArg bool) string {
 	case "error":
 		if asArg {
 			return constref(rterror) + arraySuffix
-		} else {
-			return rterror + arraySuffix
 		}
+		return rterror + arraySuffix
 	case "string":
 		if asArg {
 			return constref(stdstr) + arraySuffix
-		} else {
-			return stdstr + arraySuffix
 		}
+		return stdstr + arraySuffix
 	case "float32":
 		return "float" + arraySuffix
 	case "float64":
@@ -73,9 +71,8 @@ func cpptype(fullType string, asArg bool) string {
 	}
 	if asArg {
 		return constref(goType) + arraySuffix
-	} else {
-		return goType + arraySuffix
 	}
+	return goType + arraySuffix
 }
 
 func cppType(t string) string {
@@ -103,6 +100,9 @@ func basename(path string) string {
 
 var templatesDir = ""
 
+// FindTemplate searches for a template file with the given name
+// and returns its full path.
+//
 func FindTemplate(filename string) string {
 	if templatesDir == "" {
 		templatesDir = filepath.Clean(filepath.Join(filepath.Dir(os.Args[0]), "../lib/ridl"))
@@ -144,6 +144,9 @@ func FindTemplate(filename string) string {
 	return ""
 }
 
+// ExpandTemplate executes the template in the given file, using
+// the supplied context and writing output to the given io.Writer.
+//
 func ExpandTemplate(filename string, context *Context, w io.Writer) error {
 	if tfilename := FindTemplate(filename); tfilename != "" {
 		filename = tfilename
@@ -157,7 +160,7 @@ func ExpandTemplate(filename string, context *Context, w io.Writer) error {
 		"basename": basename,
 	}
 	t := template.New(filepath.Base(filename)).Funcs(funcMap)
-	if t, err := ParseFiles(t, filename); err != nil {
+	if t, err := ParseTemplates(t, filename); err != nil {
 		return err
 	} else if err = t.Execute(w, context); err != nil {
 		return err
@@ -166,7 +169,11 @@ func ExpandTemplate(filename string, context *Context, w io.Writer) error {
 	}
 }
 
-func ParseFiles(t *template.Template, filename string) (*template.Template, error) {
+// ParseTemplates parses the template file and adds it to
+// the given template. Special comment lines in the file
+// are skipped.
+//
+func ParseTemplates(t *template.Template, filename string) (*template.Template, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -190,6 +197,9 @@ func ParseFiles(t *template.Template, filename string) (*template.Template, erro
 	return t.ParseFiles(filename)
 }
 
+// GetEmbeddedOutputFilename looks for a special comment that defines
+// a (ridl) template's suggested output filename.
+//
 func GetEmbeddedOutputFilename(context *Context, filename string) (string, error) {
 	comments, err := ParseComments(filename)
 	if err != nil {
@@ -212,6 +222,8 @@ func GetEmbeddedOutputFilename(context *Context, filename string) (string, error
 	return fname, nil
 }
 
+// ParseComments return all of the special ridl comments in a file.
+//
 func ParseComments(filename string) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {

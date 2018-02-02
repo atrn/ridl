@@ -4,13 +4,14 @@ import (
 	"fmt"
 )
 
-// Write a package as C++
+// Dump outputs a package
 //
 func (p *Package) Dump() {
 	for _, path := range p.Imports {
 		fmt.Printf("#include %q\n", path)
 	}
-	fmt.Println("namespace", p.PackageName, "{\n")
+	fmt.Println("namespace", p.PackageName, "{")
+	fmt.Println("")
 	for _, decl := range p.Decls {
 		switch actual := decl.(type) {
 		case *TypedefDecl:

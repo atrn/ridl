@@ -8,7 +8,6 @@
 package main
 
 import (
-	"encoding/xml"
 	"flag"
 	"fmt"
 	"go/ast"
@@ -28,36 +27,30 @@ var outputFilename = ""
 func main() {
 	myname := filepath.Base(os.Args[0])
 	log.SetFlags(0)
-	log.SetPrefix(myname + " debug: ") // we only log debug output
+	log.SetPrefix(myname + ": ")
 	templates := NewStrings()
 	flag.Var(templates, "t", "generate output using `template`")
 	flag.StringVar(&outputFilename, "o", "", "output `filename`")
-	writeXML := flag.Bool("write-xml", false, "Output context as XML")
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "usage:", myname, "[options] filename...")
+		fmt.Fprintln(os.Stderr, "usage:", myname, "[options]")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-	if flag.NArg() < 1 {
+	if flag.NArg() > 0 {
 		flag.Usage()
 		os.Exit(1)
 	}
-	fail := func(err error) {
-		fmt.Fprint(os.Stderr, myname, ": ", err.Error(), "\n")
-		os.Exit(1)
+	path, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
 	}
-	for _, path := range flag.Args() {
-		pkg, err := Parse(path)
-		if err != nil {
-			fail(err)
-		}
-		if *writeXML {
-			WriteXML(pkg)
-		} else {
-			if err := Ridl(pkg, path, templates.Slice()); err != nil {
-				fail(err)
-			}
-		}
+	pkg, err := ParseFiles(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = Ridl(pkg, path, templates.Slice())
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -73,20 +66,25 @@ func (*nopWriteCloser) Close() error {
 	return nil
 }
 
+// NopWriteCloser adds an empty Close() implementation to an
+// io.Writer to transform it to an io.WriteCloser.
+//
 func NopWriteCloser(w io.Writer) io.WriteCloser {
 	return &nopWriteCloser{w}
 }
 
+// Ridl performs the ridl "code-generation" step on a Package.
+//
 func Ridl(pkg *Package, path string, templates []string) error {
 	templateContext := NewContext(path, pkg)
 	for _, templateName := range templates {
-		var out io.WriteCloser = NopWriteCloser(os.Stdout)
+		out := NopWriteCloser(os.Stdout)
 		if outputFilename != "" {
-			if file, err := MakeOutputFile(path, templateName); err != nil {
+			file, err := MakeOutputFile(path, templateName)
+			if err != nil {
 				return err
-			} else {
-			    out = file
 			}
+			out = file
 		}
 		err := ExpandTemplate(templateName, templateContext, out)
 		err2 := out.Close()
@@ -100,10 +98,13 @@ func Ridl(pkg *Package, path string, templates []string) error {
 	return nil
 }
 
-func Parse(path string) (*Package, error) {
+// ParseFiles parses all the .ridl files in the given directory
+// and returns a new Package representing their content.
+//
+func ParseFiles(path string) (*Package, error) {
 	var err error
 	fset := token.NewFileSet()
-	filenames, err := filepath.Glob(filepath.Join(filepath.Dir(path), "*.ridl"))
+	filenames, err := filepath.Glob(filepath.Join(path, "*.ridl"))
 	if err != nil {
 		return nil, err
 	}
@@ -145,10 +146,16 @@ func Parse(path string) (*Package, error) {
 	return p, nil
 }
 
+// CleanTypename removes the "untypeed" suffix appended to
+// the type names of untyped numeric constants.
+//
 func CleanTypename(t types.Type) string {
 	return strings.TrimPrefix(t.String(), "untyped ")
 }
 
+// MakeMethodArgs builds a slice of new MethodArg values for
+// the arguments in the supplied types.Tuple.
+//
 func MakeMethodArgs(args *types.Tuple, prefix string) []*MethodArg {
 	ma := make([]*MethodArg, 0)
 	for i := 0; i < args.Len(); i++ {
@@ -162,10 +169,14 @@ func MakeMethodArgs(args *types.Tuple, prefix string) []*MethodArg {
 	return ma
 }
 
+// Const adds a declaration of a constant to the receiver.
+//
 func (p *Package) Const(obj *types.Const) {
 	p.Declare(NewConstDecl(obj.Name(), CleanTypename(obj.Type()), obj.Val().ExactString()))
 }
 
+// TypeName adds a type declaration to the receiver.
+//
 func (p *Package) TypeName(obj *types.TypeName) {
 	switch t := obj.Type().Underlying().(type) {
 	case *types.Array:
@@ -185,23 +196,31 @@ func (p *Package) TypeName(obj *types.TypeName) {
 	}
 }
 
+// Map adds a map declaration to the reciever.
+//
 func (p *Package) Map(name string, obj *types.Map) {
 	keytyp := obj.Key().String()
 	valtyp := obj.Elem().String()
 	p.Declare(NewMapDecl(name, keytyp, valtyp))
 }
 
+// Slice adds a slice declaration to the receiver.
+//
 func (p *Package) Slice(name string, obj *types.Slice) {
 	typ := obj.Elem().String()
 	p.Declare(NewArrayDecl(name, typ, 0))
 }
 
+// Array adds an array declaration to the receiver.
+//
 func (p *Package) Array(name string, obj *types.Array) {
 	size := obj.Len()
 	typ := obj.Elem().String()
 	p.Declare(NewArrayDecl(name, typ, int(size)))
 }
 
+// Struct adds a struct declaration to the receiver.
+//
 func (p *Package) Struct(name string, obj *types.Struct) {
 	astruct := NewStructDecl(name)
 	for i := 0; i < obj.NumFields(); i++ {
@@ -215,6 +234,8 @@ func (p *Package) Struct(name string, obj *types.Struct) {
 	p.Declare(astruct)
 }
 
+// Interface adds an interface declaration to the receiver.
+//
 func (p *Package) Interface(name string, obj *types.Interface) {
 	xi := NewInterfaceDecl(name)
 	for i := 0; i < obj.NumMethods(); i++ {
@@ -228,10 +249,14 @@ func (p *Package) Interface(name string, obj *types.Interface) {
 	p.Declare(xi)
 }
 
+// Typedef adds a type alias declaration to the receiver.
+//
 func (p *Package) Typedef(name string, obj *types.Basic) {
 	p.Declare(NewTypedefDecl(name, obj.String()))
 }
 
+// MakeOutputFile creates a file for storing output.
+//
 func MakeOutputFile(path, templateName string) (io.WriteCloser, error) {
 	if outputFilename != "" {
 		return os.Create(outputFilename)
@@ -241,9 +266,4 @@ func MakeOutputFile(path, templateName string) (io.WriteCloser, error) {
 	}
 	name := sansExt(path) + "-" + sansExt(filepath.Base(templateName)) + ".out"
 	return os.Create(name)
-}
-
-func WriteXML(pkg *Package) {
-	e := xml.NewEncoder(os.Stdout)
-	e.Encode(pkg)
 }
