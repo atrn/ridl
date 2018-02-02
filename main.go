@@ -103,10 +103,18 @@ func Ridl(pkg *Package, path string, templates []string) error {
 func Parse(path string) (*Package, error) {
 	var err error
 	fset := token.NewFileSet()
-	files := make([]*ast.File, 1)
-	files[0], err = parser.ParseFile(fset, path, nil, 0)
+	filenames, err := filepath.Glob(filepath.Join(filepath.Dir(path), "*.ridl"))
 	if err != nil {
 		return nil, err
+	}
+	files := make([]*ast.File, 0, len(filenames))
+	for _, filename := range filenames {
+		var file *ast.File
+		file, err = parser.ParseFile(fset, filename, nil, 0)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, file)
 	}
 	conf := types.Config{
 		IgnoreFuncBodies:         true,
@@ -131,7 +139,7 @@ func Parse(path string) (*Package, error) {
 		case *types.TypeName:
 			p.TypeName(actual)
 		default:
-			log.Printf("XXX:  %T  ->  %#v\n", actual, actual)
+			log.Printf("X1:  %T  ->  %#v\n", actual, actual)
 		}
 	}
 	return p, nil
@@ -168,9 +176,24 @@ func (p *Package) TypeName(obj *types.TypeName) {
 		p.Interface(obj.Name(), t)
 	case *types.Struct:
 		p.Struct(obj.Name(), t)
+	case *types.Slice:
+		p.Slice(obj.Name(), t)
+	case *types.Map:
+		p.Map(obj.Name(), t)
 	default:
-		log.Printf("XXXX %T %#v\n", t, t)
+		log.Printf("X2 %T %#v\n", t, t)
 	}
+}
+
+func (p *Package) Map(name string, obj *types.Map) {
+	keytyp := obj.Key().String()
+	valtyp := obj.Elem().String()
+	p.Declare(NewMapDecl(name, keytyp, valtyp))
+}
+
+func (p *Package) Slice(name string, obj *types.Slice) {
+	typ := obj.Elem().String()
+	p.Declare(NewArrayDecl(name, typ, 0))
 }
 
 func (p *Package) Array(name string, obj *types.Array) {

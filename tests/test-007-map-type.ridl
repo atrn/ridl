@@ -3,3 +3,4 @@
 package ridl_tests
 
 type Dict map[string]string
+type Scene map[int]Samples

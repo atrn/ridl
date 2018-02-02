@@ -96,7 +96,7 @@ func NewConstDecl(name, typ, value string) *ConstDecl {
 	}
 }
 
-// Type returns the receive's type.
+// Type returns the receiver's type.
 //
 func (decl *ConstDecl) Type() string {
 	return decl.typ
@@ -150,6 +150,14 @@ func NewArrayDecl(name, typ string, size int) *ArrayDecl {
 		typ:       typ,
 		size:      size,
 	}
+}
+
+func (a *ArrayDecl) Size() int {
+	return a.size
+}
+
+func (a *ArrayDecl) ElemType() string {
+	return a.typ
 }
 
 // Type returns the receiver's type.
@@ -228,6 +236,30 @@ func (sf *StructField) Type() string {
 type StructFieldTag struct {
 	Key   string
 	Value string
+}
+
+//================================================================
+
+type MapDecl struct {
+	basicDecl
+	keytyp string
+	valtyp string
+}
+
+func NewMapDecl(name, keytyp, valtyp string) *MapDecl {
+	return &MapDecl{
+		basicDecl: basicDecl{name},
+		keytyp:       keytyp,
+		valtyp: valtyp,
+	}
+}
+
+func (decl *MapDecl) KeyType() string {
+	return decl.keytyp
+}
+
+func (decl *MapDecl) Type() string {
+	return decl.valtyp
 }
 
 //================================================================

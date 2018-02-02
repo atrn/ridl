@@ -36,6 +36,8 @@ type Context struct {
 	Typedefs []*TypedefDecl
 	// The array and slice types.
 	ArrayTypes []*ArrayDecl
+	// The map types.
+	MapTypes []*MapDecl
 	// The struct types.
 	StructTypes []*StructDecl
 	// Interfaces.
@@ -61,6 +63,7 @@ func NewContext(filename string, pkg *Package) *Context {
 		Hostname:    hostname,
 		Typedefs:    make([]*TypedefDecl, 0),
 		ArrayTypes:  make([]*ArrayDecl, 0),
+		MapTypes:    make([]*MapDecl, 0),
 		StructTypes: make([]*StructDecl, 0),
 		Interfaces:  make([]*InterfaceDecl, 0),
 		Constants:   make([]*ConstDecl, 0),
@@ -74,6 +77,8 @@ func NewContext(filename string, pkg *Package) *Context {
 			context.Typedefs = append(context.Typedefs, d)
 		case *ArrayDecl:
 			context.ArrayTypes = append(context.ArrayTypes, d)
+		case *MapDecl:
+			context.MapTypes = append(context.MapTypes, d)
 		case *StructDecl:
 			context.StructTypes = append(context.StructTypes, d)
 		case *InterfaceDecl:

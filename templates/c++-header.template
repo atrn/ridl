@@ -6,10 +6,11 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
 
-{{- range .Imports -}}
+{{- range .Imports}}
 #include "{{.}}.hpp"
-{{- end}}
+{{end}}
 
 namespace {{.PackageName}} {
 
@@ -18,25 +19,16 @@ namespace {{.PackageName}} {
 // Typedefs
 
 {{- range .Typedefs}}
-typedef {{cpptype .Alias}} {{.Name}};
-{{end}}
+using {{.Name}} = {{cpptype .Alias}};
+{{- end}}
 {{- end}}
 
 {{- if .Constants}}
 
 // Constants
 
-{{- range .Constants}}
+{{range .Constants}}
 const {{cpptype .Type}} {{.Name}} = {{.Value}};
-{{- end}}
-{{- end}}
-
-{{- if .ArrayTypes}}
-
-// Arrays
-
-{{- range .ArrayTypes}}
-{{if eq .Size 0}}typedef std::vector<{{cpptype .Type}}> {{.Name}};{{else}}typedef std::array<{{cpptype .Type}}, {{.Size}}> {{.Name}};{{end}}
 {{- end}}
 {{- end}}
 
@@ -44,13 +36,31 @@ const {{cpptype .Type}} {{.Name}} = {{.Value}};
 
 // Structs
 
-{{- range .StructTypes}}
+{{range .StructTypes}}
 struct {{.Name}} {
 {{- range .Fields}}
-    {{cpptype .Type }} _{{.Name}};
+    {{restype .Type }} _{{.Name}};
 {{- end}}
 };
 {{end}}
+{{- end}}
+
+{{- if .ArrayTypes}}
+
+// Arrays
+
+{{- range .ArrayTypes}}
+using {{.Name}} = {{if eq .Size 0}}std::vector<{{cpptype .ElemType}}>{{else}}std::array<{{cpptype .ElemType}}, {{.Size}}>{{end}};
+{{- end}}
+{{- end}}
+
+{{- if .MapTypes}}
+
+// Maps
+
+{{- range .MapTypes}}
+using {{.Name}} = std::map<{{restype .KeyType}}, {{restype .Type}}>;
+{{- end}}
 {{- end}}
 
 // Interface results
@@ -76,7 +86,6 @@ struct {{.Name}}_Result {
 
 class {{.Name}} {
 public:
-    {{.Name}}();
     virtual ~{{.Name}}();
 {{- range .Methods}}
     virtual

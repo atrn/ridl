@@ -1,0 +1,5 @@
+package ridl_tests
+
+import "time"
+
+type Timestamp time.Time

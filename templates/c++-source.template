@@ -8,11 +8,7 @@ namespace {{.PackageName}}
 {
 
 {{range .Interfaces}}
-{{.Name}}::{{.Name}}() {
-}
-
-{{.Name}}::~{{.Name}}() {
-}
+{{.Name}}::~{{.Name}}() {}
 {{end}}
 
 } // namespace {{.PackageName}}
