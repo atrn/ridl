@@ -1,0 +1,7 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Coord float32
+type Vec [3]Coord
+type Samples []float32

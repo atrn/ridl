@@ -1,0 +1,13 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+// Enums done the go way.
+//
+type TypeCode int8
+const (
+	NullType TypeCode = iota
+	ShapeType
+	TextType
+	VideoType
+)

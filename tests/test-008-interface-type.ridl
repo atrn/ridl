@@ -1,0 +1,14 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type API interface {
+	NoArgsNoResult()
+	NoArgsOneResult() int
+	NoArgsStructResult() Header
+	Args(length int, description string)
+	ArgsAndOneResult(Header, [4]float64) error
+	ArgsAndTwoResults(Header, [4]float64, [1024]float32) (string, error)
+	ArgsAndTwoNamedResults(Header, [4]float64) (name string, err error)
+	ArraysAndFloats([]float32, float32, float64) []float64
+}

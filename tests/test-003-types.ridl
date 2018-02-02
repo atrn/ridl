@@ -1,0 +1,19 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Header struct {
+	Code      int8
+	Flags     uint8
+	Delta     int16
+	Len       uint16
+	Version   int32
+	ElSize    uint32
+	Balance   int64
+	Timestamp uint64
+	Flag      bool
+	Message   string
+	Error     error
+	Array     [3]int
+	Vector    []float32
+}

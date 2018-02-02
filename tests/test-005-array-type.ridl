@@ -1,0 +1,10 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Vec [3]Coord
+type Samples []float32
+type Point struct {
+	x, y Coord
+}
+type Path []Point
