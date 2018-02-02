@@ -16,6 +16,7 @@ namespace {{.PackageName}} {
 {{- if .Typedefs}}
 
 // Typedefs
+
 {{- range .Typedefs}}
 typedef {{cpptype .Alias}} {{.Name}};
 {{end}}
@@ -52,16 +53,17 @@ struct {{.Name}} {
 {{end}}
 {{- end}}
 
+// Interface results
 {{- if .Interfaces}}
-{{- range .Interfaces}}
-{{- range .Methods}}
+{{- range .Interfaces -}}
+{{- range .Methods -}}
 {{- if .Results}}
 {{$n := len .Results}}
 {{- if eq $n 1 -}}
 {{- else -}}
 struct {{.Name}}_Result {
 {{- range $index, $arg := .Results}}
-    {{cpptype $arg.Type}} _{{$arg.Name}};
+    {{restype $arg.Type}} _{{$arg.Name}};
 {{- end}}
 };
 {{end -}}
@@ -69,6 +71,7 @@ struct {{.Name}}_Result {
 {{- end}}
 {{- end}}
 
+// Interfaces
 {{- range .Interfaces}}
 
 class {{.Name}} {
@@ -79,7 +82,7 @@ public:
     virtual
 {{- if .Results -}}
 {{- $n := len .Results}}
- {{if eq $n 1}}{{$val := index .Results 0}}{{cpptype $val.Type}}{{else}}{{.Name}}_Result{{end -}}
+ {{if eq $n 1}}{{$val := index .Results 0}}{{restype $val.Type}}{{else}}{{.Name}}_Result{{end -}}
 {{else}}
  void
 {{- end}} {{.Name}}({{- range $index, $arg := .Args}}{{if eq $index 0}}{{else}}, {{end}}{{argtype $arg.Type}} {{$arg.Name}}{{end}}) = 0;

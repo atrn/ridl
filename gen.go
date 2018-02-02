@@ -33,8 +33,7 @@ func cpptype(fullType string, asArg bool) string {
 		if end == -1 {
 			panic("malformed type")
 		}
-		arraySuffix = fullType[0 : end+1]
-		goType = fullType[end+1:]
+		arraySuffix, goType = fullType[0:end+1], fullType[end+1:]
 		if asArg || arraySuffix == "[]" {
 			// slice -> pointer to T
 			arraySuffix = " *"
@@ -85,6 +84,15 @@ func cppType(t string) string {
 
 func argType(t string) string {
 	return cpptype(t, true)
+}
+
+func resType(t string) string {
+	t = cpptype(t, false)
+	if strings.HasSuffix(t, " *") {
+		t = strings.TrimSuffix(t, " *")
+		t = fmt.Sprintf("std::vector<%s>", t)
+	}
+	return t
 }
 
 func basename(path string) string {
@@ -145,6 +153,7 @@ func ExpandTemplate(filename string, context *Context, w io.Writer) error {
 	funcMap := map[string]interface{}{
 		"cpptype":  cppType,
 		"argtype":  argType,
+		"restype":  resType,
 		"basename": basename,
 	}
 	t := template.New(filepath.Base(filename)).Funcs(funcMap)

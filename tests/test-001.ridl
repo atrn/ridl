@@ -3,22 +3,36 @@
 package xyz
 
 const (
+	Release   = 1
 	Version   = 1234.567
 	Copyright = "Copyright (C) Example Corp"
 )
 
+type TypeCode uint8
+
+const (
+	NullType TypeCode = 1 << iota
+	ShapeType
+	TextType
+	VideoType
+)
+
 type Header struct {
-	Code    uint8
-	Flags   uint8
-	Len     uint16
-	Version int32
+	Code      TypeCode
+	Flags     uint8
+	Len       uint16
+	Version   int32
+	Timestamp uint64
+	Flag      bool
 }
 
 type API interface {
 	Signal()
-	Data(int, string)
-	DataAndResult(Header, [4]float64) error
-	DataAndResults(Header, [4]float64, [1024]float32) (string, error)
-	DataAndNamedResults(Header, [4]float64) (name string, err error)
-	ArraysAndFloats([]float32, float32, float32) []float32
+	NoArgsIntResult() int
+	HeaderResult() Header
+	Args(length int, description string)
+	ArgsAndOneResult(Header, [4]float64) error
+	ArgsAndTwoResult(Header, [4]float64, [1024]float32) (string, error)
+	ArgsAndTwoNamedResults(Header, [4]float64) (name string, err error)
+	ArraysAndFloats([]float32, float32, float64) []float64
 }
