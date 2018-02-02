@@ -9,48 +9,14 @@ package main
 
 import "fmt"
 
-// The Package type represents a single package, a named collection of
-// declarations, constants and types, and imported packages.
-//
-// A Package's Decls and Imports are in declaration order.
-//
-type Package struct {
-	PackageName string
-	Decls       []Decl
-	Imports     []string
-}
+//  ================================================================
 
-// NewPackage creates a new Package that has the given name.
-// The Package is created with a nil, not empty, Decls and
-// Imports arrays.
-//
-func NewPackage(name string) *Package {
-	return &Package{
-		PackageName: name,
-	}
-}
-
-// Declare appends a Decl to the receiver's collection of declarations.
-//
-func (pkg *Package) Declare(decl Decl) {
-	pkg.Decls = append(pkg.Decls, decl)
-}
-
-// Import appends the name of an imported package to the receiver's
-// collection of imports.
-//
-func (pkg *Package) Import(path string) {
-	pkg.Imports = append(pkg.Imports, path)
-}
-
-//================================================================
-
-// The Decl interface is used to access declarationss, either types
-// or constants.
+// The Decl interface is used to get information about declarations,
+// either types or constants.
 //
 type Decl interface {
-	// The Name method retrieves the name of the receiver,
-	// an unqualified Go identifer.
+	// The Name method returns the name of the receiver, an
+	// unqualified Go identifer.
 	//
 	Name() string
 
@@ -59,11 +25,10 @@ type Decl interface {
 	Type() string
 }
 
-//================================================================
+//  ================================================================
 
-// The basicDecl struct holds data common to all declarations.
-// The basicDecl type is intended to be embedded in more concrete
-// declarations.
+// The basicDecl struct holds data common to all declarations.  The
+// basicDecl type is be embedded in declaration types.
 //
 type basicDecl struct {
 	name string
@@ -75,10 +40,10 @@ func (b *basicDecl) Name() string {
 	return b.name
 }
 
-//================================================================
+//  ================================================================
 
-// The ConstDecl type represents a constant declration. A constant has
-// a name, type and value, all represented as strings.
+// The ConstDecl type represents a constant. A constant has a name,
+// type and value, all represented as strings.
 //
 type ConstDecl struct {
 	basicDecl
@@ -86,7 +51,7 @@ type ConstDecl struct {
 	Value string
 }
 
-// NewConstDecl returns a new ConstDecl withthe given name, type and value.
+// NewConstDecl returns a new ConstDecl with the given name, type and value.
 //
 func NewConstDecl(name, typ, value string) *ConstDecl {
 	return &ConstDecl{
@@ -102,7 +67,7 @@ func (decl *ConstDecl) Type() string {
 	return decl.typ
 }
 
-//================================================================
+//  ================================================================
 
 // A TypedefDecl records a type alias formed by a type declaration
 // of the form "type <identifier> <identifier>".
@@ -129,7 +94,7 @@ func (t *TypedefDecl) Type() string {
 	return t.Alias
 }
 
-//================================================================
+//  ================================================================
 
 // ArrayDecl rerpresents an array or slice declaration (a slice
 // being interpreted as an unbounded array).
@@ -173,6 +138,8 @@ func (a *ArrayDecl) Type() string {
 	return fmt.Sprintf("[%d]%s", a.size, a.typ)
 }
 
+// ================================================================
+
 // The StructDecl type represents a struct type declaration. A struct
 // type has a name and zero or more fields, represented by StructField
 // values.
@@ -204,7 +171,7 @@ func (decl *StructDecl) Type() string {
 	return "struct " + decl.Name()
 }
 
-//================================================================
+//  ================================================================
 
 // The StructField type represents a field within a structure.  Each
 // field has a name and a type. Embedded types are represented by
@@ -232,7 +199,7 @@ func (sf *StructField) Type() string {
 	return sf.typ
 }
 
-//================================================================
+//  ================================================================
 
 // The StructFieldTag type represents a single tag applied to
 // the field of a struct.
@@ -242,7 +209,7 @@ type StructFieldTag struct {
 	Value string
 }
 
-//================================================================
+//  ================================================================
 
 // MapDecl represents a map declaration.
 //
@@ -275,7 +242,7 @@ func (decl *MapDecl) Type() string {
 	return decl.valtyp
 }
 
-//================================================================
+//  ================================================================
 
 // The InterfaceDecl type represents an interface type. An interface
 // is a, named, collection of zero or more Methods.
@@ -314,7 +281,7 @@ func (decl *InterfaceDecl) Embed(n string) {
 	decl.Embeds = append(decl.Embeds, n)
 }
 
-//================================================================
+//  ================================================================
 
 // The Method type represents a method declared within an interface.
 // A method has a name and zero or more arguments, represented by
@@ -344,7 +311,7 @@ func (decl *Method) Type() string {
 	return "func " + decl.Name()
 }
 
-//================================================================
+//  ================================================================
 
 // The MethodArg  type represents an  argument to  or a result  from a
 // Method. A MethodArg has a name and a type. The name may be empty.
