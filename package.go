@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/types"
 	"log"
+	"strings"
 )
 
 // The Package type represents a single package, a named collection of
@@ -29,21 +30,21 @@ func NewPackage(name string) *Package {
 
 // Declare appends a Decl to the receiver's collection of declarations.
 //
-func (pkg *Package) Declare(decl Decl) {
-	pkg.Decls = append(pkg.Decls, decl)
+func (p *Package) Declare(decl Decl) {
+	p.Decls = append(p.Decls, decl)
 }
 
 // Import appends the name of an imported package to the receiver's
 // collection of imports.
 //
-func (pkg *Package) Import(path string) {
-	pkg.Imports = append(pkg.Imports, path)
+func (p *Package) Import(path string) {
+	p.Imports = append(p.Imports, path)
 }
 
 // Const adds a declaration of a constant to the receiver.
 //
 func (p *Package) Const(obj *types.Const) {
-	p.Declare(NewConstDecl(obj.Name(), CleanTypename(obj.Type()), obj.Val().ExactString()))
+	p.Declare(NewConstDecl(obj.Name(), cleanTypename(obj.Type()), obj.Val().ExactString()))
 }
 
 // TypeName adds a type declaration to the receiver.
@@ -113,7 +114,7 @@ func makeMethodArgs(args *types.Tuple, prefix string) []*MethodArg {
 		if name == "" {
 			name = fmt.Sprintf("%s%d", prefix, i+1)
 		}
-		ma = append(ma, NewMethodArg(name, CleanTypename(arg.Type())))
+		ma = append(ma, NewMethodArg(name, cleanTypename(arg.Type())))
 	}
 	return ma
 }
@@ -137,4 +138,8 @@ func (p *Package) Interface(name string, obj *types.Interface) {
 //
 func (p *Package) Typedef(name string, obj *types.Basic) {
 	p.Declare(NewTypedefDecl(name, obj.String()))
+}
+
+func cleanTypename(t types.Type) string {
+	return strings.TrimPrefix(t.String(), "untyped ")
 }
