@@ -1,0 +1,2 @@
+-L/opt/swlib/zeromq/current/release/lib
+-lzmq

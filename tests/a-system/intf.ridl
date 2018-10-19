@@ -1,0 +1,28 @@
+package a_system
+
+const PackageID uint16 = 0xca5e
+
+type Sync uint64
+
+type Timestamp struct {
+	Secs  uint64
+	Nanos uint32 // [0, 999999999]
+}
+
+type Pixel uint32
+
+type Image struct {
+        Time Timestamp
+        Width, Height uint32
+        Data []Pixel
+}
+
+type ImageID uint64
+
+type Server interface {
+	Noop()
+	Hello(name string) (message string, err error)
+	Auth(token string, t Timestamp) (key string, err error)
+        PostImage(key string, image Image) (ImageID, error)
+	Reset()
+}
