@@ -90,7 +90,7 @@ struct {{$interface}}_{{.Name}}_Result {
 
 class {{$interface}} {
 public:
-    virtual ~{{.Name}}();
+    virtual ~{{.Name}}() {};
 {{- range .Methods}}
     virtual
 {{- if .Results -}}

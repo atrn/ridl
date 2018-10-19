@@ -21,12 +21,12 @@ struct header {
     uint32_t _size;
 };
 
-inline uint32_t code(uint16_t pkgid, uint16_t msgid) {
+inline uint32_t make_msgcode(uint16_t pkgid, uint16_t msgid) {
     return uint32_t(pkgid)<<16|uint32_t(msgid);
 }
 
 inline header make_header(uint16_t pkgid, uint16_t msgid, size_t size) {
-    return header{code(pkgid, msgid), uint32_t(size)};
+    return header{make_msgcode(pkgid, msgid), uint32_t(size)};
 }
 
 template <typename T>
@@ -38,7 +38,7 @@ inline header make_header(uint16_t pkgid, uint16_t msgid) {
 {{range .Interfaces -}}
 {{$interface := .Name}}
 {{- range .Methods -}}
-const auto {{$interface}}_{{.Name}}_code = code(PackageID, {{$msgid}});
+const auto {{$interface}}_{{.Name}}_msgcode = make_msgcode(PackageID, {{$msgid}});
 {{$msgid = plus $msgid 1}}
 {{- end}}
 {{- end}}
@@ -53,7 +53,7 @@ struct {{$interface}}_{{.Name}}_Args {
 };
 
 struct {{$interface}}_{{.Name}} {
-    header _header = make_header(PackageID, {{$interface}}_{{.Name}}_code, sizeof ({{$interface}}_{{.Name}}_Args));
+    header _header = make_header(PackageID, {{$interface}}_{{.Name}}_msgcode, sizeof ({{$interface}}_{{.Name}}_Args));
     {{$interface}}_{{.Name}}_Args _payload;
 };
 {{end}}

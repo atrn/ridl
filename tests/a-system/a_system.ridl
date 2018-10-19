@@ -1,3 +1,5 @@
+// -*- mode:go -*-
+
 package a_system
 
 const PackageID uint16 = 0xca5e
@@ -12,17 +14,18 @@ type Timestamp struct {
 type Pixel uint32
 
 type Image struct {
-        Time Timestamp
-        Width, Height uint32
-        Data []Pixel
+	Time          Timestamp
+	Width, Height uint32
+	Data          []Pixel
 }
 
 type ImageID uint64
 
-type Server interface {
+type Service interface {
 	Noop()
 	Hello(name string) (message string, err error)
 	Auth(token string, t Timestamp) (key string, err error)
-        PostImage(key string, image Image) (ImageID, error)
+	GetServerTime(key string) (Timestamp, error)
+	PostImage(key string, image Image) (ImageID, error)
 	Reset()
 }
