@@ -17,6 +17,7 @@ import (
 
 func main() {
 	myname := filepath.Base(os.Args[0])
+
 	log.SetFlags(0)
 	log.SetPrefix(myname + ": ")
 
@@ -32,20 +33,26 @@ func main() {
 
 	flag.Parse()
 
-	if flag.NArg() == 0 {
-		path, err := os.Getwd()
-		if err == nil {
-			err = ridl(path, *outputFilename, templateNames)
-		}
+	process := func(path, output string) {
+		err := ridl(path, output, templateNames)
 		if err != nil {
 			log.Fatal(err)
 		}
-	} else {
-		for _, path := range flag.Args() {
-			err := ridl(path, filepath.Join(path, *outputFilename), templateNames)
-			if err != nil {
-				log.Fatal(err)
-			}
+	}
+
+	getcwd := func() string {
+		path, err := os.Getwd()
+		if err != nil {
+			log.Fatal(err)
 		}
+		return path
+	}
+
+	if flag.NArg() > 0 {
+		for _, path := range flag.Args() {
+			process(path, filepath.Join(path, *outputFilename))
+		}
+	} else {
+		process(getcwd(), *outputFilename)
 	}
 }

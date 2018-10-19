@@ -15,7 +15,7 @@ func (*nopWriteCloser) Close() error {
 }
 
 // NopWriteCloser adds an empty Close() implementation to an
-// io.Writer to transform it to an io.WriteCloser.
+// io.Writer to make it an io.WriteCloser.
 //
 func NopWriteCloser(w io.Writer) io.WriteCloser {
 	return &nopWriteCloser{w}

@@ -57,12 +57,12 @@ func parseFiles(path string) (*Package, error) {
 func generateOutput(pkg *Package, path string, templateNames *StringSlice, outputFilename string) error {
 	templateContext := NewContext(path, pkg)
 	for _, templateName := range templateNames.Slice() {
-		out, err := getOutput(path, templateName, outputFilename)
+		w, err := getOutput(path, templateName, outputFilename)
 		if err != nil {
 			return err
 		}
-		err = ExpandTemplate(templateName, templateContext, out)
-		err2 := out.Close()
+		err = ExpandTemplate(templateName, templateContext, w)
+		err2 := w.Close()
 		if err == nil {
 			err = err2
 		}
