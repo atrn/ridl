@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/types"
 	"log"
+	"sort"
 	"strings"
 )
 
@@ -33,10 +34,11 @@ func NewPackage(pkg *types.Package) *Package {
 		p.Import(imported.Path())
 	}
 
-	scope := pkg.Scope()
-	names := scope.Names()
-	for i := 0; i < scope.Len(); i++ {
-		obj := scope.Lookup(names[i])
+	// scope := pkg.Scope()
+	// names := scope.Names()
+	//	for i := 0; i < scope.Len(); i++ {
+	//		obj := scope.Lookup(names[i])
+	for _, obj := range objectsInDeclarationOrder(pkg) {
 		switch actual := obj.(type) {
 		case *types.Const:
 			p.Const(actual)
@@ -169,4 +171,17 @@ func (p *Package) Typedef(name string, obj *types.Basic) {
 
 func cleanTypename(t types.Type) string {
 	return strings.TrimPrefix(t.String(), "untyped ")
+}
+
+func objectsInDeclarationOrder(pkg *types.Package) []types.Object {
+	scope := pkg.Scope()
+	names := scope.Names()
+	objects := make([]types.Object, 0, len(names))
+	for _, name := range names {
+		objects = append(objects, scope.Lookup(name))
+	}
+	sort.Slice(objects, func(i, j int) bool {
+		return objects[i].Pos() < objects[j].Pos()
+	})
+	return objects
 }

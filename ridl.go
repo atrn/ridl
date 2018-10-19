@@ -50,6 +50,7 @@ func parseFiles(paths []string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return NewPackage(pkg), nil
 }
 
