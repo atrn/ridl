@@ -15,23 +15,29 @@ import (
 	"path/filepath"
 )
 
+var (
+	templateNames  = NewStringSlice()
+	outputFilename = flag.String("o", "", "write output to `filename`")
+	templatesDir   = flag.String("D", "", "search for templates in `dir`")
+)
+
 func main() {
 	myname := filepath.Base(os.Args[0])
+
+	log.SetFlags(0)
+	log.SetPrefix(myname + ": ")
 
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "usage:", myname, "[options] [path]")
 		flag.PrintDefaults()
 	}
-
-	log.SetFlags(0)
-	log.SetPrefix(myname + ": ")
-
-	templateNames := NewStringSlice()
-
-	outputFilename := flag.String("o", "", "write output to `filename`")
 	flag.Var(templateNames, "t", "generate output using `template`")
 
 	flag.Parse()
+
+	if *templatesDir == "" {
+		*templatesDir = filepath.Clean(filepath.Join(filepath.Dir(os.Args[0]), "../lib/ridl"))
+	}
 
 	process := func(path, output string) {
 		err := ridl(path, output, templateNames.Slice())

@@ -94,9 +94,14 @@ func basename(path string) string {
 	return path
 }
 
+func lc(s string) string {
+	return strings.ToLower(s)
+}
+
 var cppTemplateFuncs = map[string]interface{}{
-	"cpptype":  cppType,
 	"argtype":  argType,
-	"restype":  resType,
 	"basename": basename,
+	"cpptype":  cppType,
+	"lc":       lc,
+	"restype":  resType,
 }

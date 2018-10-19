@@ -17,41 +17,34 @@ import (
 	"text/template"
 )
 
-var templatesDir = ""
-
 // FindTemplate searches for a template file with the given name
 // and returns its full path.
 //
 func FindTemplate(filename string) string {
-	if templatesDir == "" {
-		templatesDir = filepath.Clean(filepath.Join(filepath.Dir(os.Args[0]), "../lib/ridl"))
-	}
 	fileexists := func(path string) (string, bool) {
-		info, err := os.Stat(path)
-		if err == nil {
-			return path, !info.IsDir()
-		}
-		if !os.IsNotExist(err) {
+		try := func(path string) (string, bool) {
+			if info, err := os.Stat(path); err == nil {
+				return path, !info.IsDir()
+			}
 			return "", false
 		}
-		path = path + ".template"
-		info, err = os.Stat(path)
-		if err == nil {
-			return path, !info.IsDir()
+		p, ok := try(path)
+		if !ok {
+			p, ok = try(path + ".template")
 		}
-		return "", false
+		return p, ok
 	}
 	if path, exists := fileexists(filename); exists {
 		return path
 	}
-	if dir := os.Getenv("RIDL"); dir != "" {
+	if dir := os.Getenv("RIDLDIR"); dir != "" {
 		name := filepath.Join(dir, filename)
 		if path, exists := fileexists(name); exists {
 			return path
 		}
 	}
-	if templatesDir != "" {
-		name := filepath.Join(templatesDir, filename)
+	if *templatesDir != "" {
+		name := filepath.Join(*templatesDir, filename)
 		if path, exists := fileexists(name); exists {
 			return path
 		}
