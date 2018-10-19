@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// Dump outputs a package
+// Dump outputs a package in a somewhat readable format.
 //
 func (p *Package) Dump() {
 	for _, path := range p.Imports {
