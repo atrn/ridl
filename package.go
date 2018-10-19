@@ -123,6 +123,8 @@ func (p *Package) Struct(name string, obj *types.Struct) {
 	for i := 0; i < obj.NumFields(); i++ {
 		avar := obj.Field(i)
 		if avar.Anonymous() {
+			// fixme - should ridl allow embedding?
+			//
 			continue
 		}
 		f := NewStructField(avar.Name(), avar.Type().String())

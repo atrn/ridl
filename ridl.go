@@ -19,20 +19,20 @@ import (
 	"strings"
 )
 
-func ridl(path string, outputSpec string, templateNames *StringSlice) error {
-	if pkg, err := parseFiles(path); err != nil {
+func ridl(path string, outputSpec string, templateNames []string) error {
+	paths, err := filepath.Glob(filepath.Join(path, "*.ridl"))
+	if err != nil {
+		return err
+	}
+	if pkg, err := parseFiles(paths); err != nil {
 		return err
 	} else {
 		return generateOutput(pkg, path, templateNames, outputSpec)
 	}
 }
 
-func parseFiles(path string) (*Package, error) {
+func parseFiles(paths []string) (*Package, error) {
 	fset := token.NewFileSet()
-	paths, err := filepath.Glob(filepath.Join(path, "*.ridl"))
-	if err != nil {
-		return nil, err
-	}
 	files := make([]*ast.File, 0, len(paths))
 	for _, path := range paths {
 		file, err := parser.ParseFile(fset, path, nil, 0)
@@ -50,13 +50,12 @@ func parseFiles(path string) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return NewPackage(pkg), nil
 }
 
-func generateOutput(pkg *Package, path string, templateNames *StringSlice, outputFilename string) error {
+func generateOutput(pkg *Package, path string, templateNames []string, outputFilename string) error {
 	templateContext := NewContext(path, pkg)
-	for _, templateName := range templateNames.Slice() {
+	for _, templateName := range templateNames {
 		w, err := getOutput(path, templateName, outputFilename)
 		if err != nil {
 			return err
