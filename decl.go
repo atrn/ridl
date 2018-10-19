@@ -11,8 +11,8 @@ import "fmt"
 
 //  ================================================================
 
-// The Decl interface is used to get information about declarations,
-// either types or constants.
+// The Decl interface is used to retrieve information about
+// declarations, their name and type.
 //
 type Decl interface {
 	// The Name method returns the name of the receiver, an
@@ -20,23 +20,23 @@ type Decl interface {
 	//
 	Name() string
 
-	// The Type method returns the reciever's, Go, type as a string.
+	// The Type method returns the reciever's Go type as a string.
 	//
 	Type() string
 }
 
 //  ================================================================
 
-// The basicDecl struct holds data common to all declarations.  The
-// basicDecl type is be embedded in declaration types.
+// The decl struct holds data common to all declarations.  The
+// decl type is be embedded in declaration types.
 //
-type basicDecl struct {
+type decl struct {
 	name string
 }
 
 // Name returns the receiver's name, a Go identifier.
 //
-func (b *basicDecl) Name() string {
+func (b *decl) Name() string {
 	return b.name
 }
 
@@ -46,7 +46,7 @@ func (b *basicDecl) Name() string {
 // type and value, all represented as strings.
 //
 type ConstDecl struct {
-	basicDecl
+	decl
 	typ   string
 	Value string
 }
@@ -54,11 +54,7 @@ type ConstDecl struct {
 // NewConstDecl returns a new ConstDecl with the given name, type and value.
 //
 func NewConstDecl(name, typ, value string) *ConstDecl {
-	return &ConstDecl{
-		basicDecl: basicDecl{name},
-		typ:       typ,
-		Value:     value,
-	}
+	return &ConstDecl{decl{name}, typ, value}
 }
 
 // Type returns the receiver's type.
@@ -73,7 +69,7 @@ func (decl *ConstDecl) Type() string {
 // of the form "type <identifier> <identifier>".
 //
 type TypedefDecl struct {
-	basicDecl
+	decl
 	Alias string
 }
 
@@ -81,10 +77,7 @@ type TypedefDecl struct {
 // name and aliased type.
 //
 func NewTypedefDecl(name, alias string) *TypedefDecl {
-	return &TypedefDecl{
-		basicDecl{name},
-		alias,
-	}
+	return &TypedefDecl{decl{name}, alias}
 }
 
 // Type returns the receiver's type, the alias part of
@@ -100,7 +93,7 @@ func (t *TypedefDecl) Type() string {
 // being interpreted as an unbounded array).
 //
 type ArrayDecl struct {
-	basicDecl
+	decl
 	typ  string
 	size int // 0 means variable, i.e. a slice
 }
@@ -110,11 +103,7 @@ type ArrayDecl struct {
 // array, or vector, type.
 //
 func NewArrayDecl(name, typ string, size int) *ArrayDecl {
-	return &ArrayDecl{
-		basicDecl: basicDecl{name},
-		typ:       typ,
-		size:      size,
-	}
+	return &ArrayDecl{decl{name}, typ, size}
 }
 
 // Size returns the number of elements in the receiver.
@@ -145,7 +134,7 @@ func (a *ArrayDecl) Type() string {
 // values.
 //
 type StructDecl struct {
-	basicDecl
+	decl
 	Fields []*StructField
 }
 
@@ -153,10 +142,7 @@ type StructDecl struct {
 // given name.
 //
 func NewStructDecl(name string) *StructDecl {
-	return &StructDecl{
-		basicDecl: basicDecl{name},
-		Fields:    nil,
-	}
+	return &StructDecl{decl{name}, nil}
 }
 
 // AddField appends a field to the receiver's collection of fields.
@@ -178,7 +164,7 @@ func (decl *StructDecl) Type() string {
 // fields with an empty Name.
 //
 type StructField struct {
-	basicDecl
+	decl
 	typ string
 	Tag []StructFieldTag
 }
@@ -187,10 +173,7 @@ type StructField struct {
 // type.
 //
 func NewStructField(name, typ string) *StructField {
-	return &StructField{
-		basicDecl: basicDecl{name},
-		typ:       typ,
-	}
+	return &StructField{decl{name}, typ, nil}
 }
 
 // Type returns the receiver's type.
@@ -214,7 +197,7 @@ type StructFieldTag struct {
 // MapDecl represents a map declaration.
 //
 type MapDecl struct {
-	basicDecl
+	decl
 	keytyp string
 	valtyp string
 }
@@ -223,11 +206,7 @@ type MapDecl struct {
 // and key and value types.
 //
 func NewMapDecl(name, keytyp, valtyp string) *MapDecl {
-	return &MapDecl{
-		basicDecl: basicDecl{name},
-		keytyp:    keytyp,
-		valtyp:    valtyp,
-	}
+	return &MapDecl{decl{name}, keytyp, valtyp}
 }
 
 // KeyType returns the type, as a string, of the receiver's keys.
@@ -248,7 +227,7 @@ func (decl *MapDecl) Type() string {
 // is a, named, collection of zero or more Methods.
 //
 type InterfaceDecl struct {
-	basicDecl
+	decl
 	Methods []*Method
 	Embeds  []string
 }
@@ -257,10 +236,7 @@ type InterfaceDecl struct {
 // given name.
 //
 func NewInterfaceDecl(name string) *InterfaceDecl {
-	return &InterfaceDecl{
-		basicDecl: basicDecl{name},
-		Methods:   nil,
-	}
+	return &InterfaceDecl{decl{name}, nil, nil}
 }
 
 // Type returns the receiver's type.
@@ -289,7 +265,7 @@ func (decl *InterfaceDecl) Embed(n string) {
 // MethodArg values.
 //
 type Method struct {
-	basicDecl
+	decl
 	Args    []*MethodArg
 	Results []*MethodArg
 }
@@ -298,11 +274,7 @@ type Method struct {
 // and results.
 //
 func NewMethod(name string, args []*MethodArg, results []*MethodArg) *Method {
-	return &Method{
-		basicDecl: basicDecl{name},
-		Args:      args,
-		Results:   results,
-	}
+	return &Method{decl{name}, args, results}
 }
 
 // Type returns the receiver's type.
@@ -317,17 +289,14 @@ func (decl *Method) Type() string {
 // Method. A MethodArg has a name and a type. The name may be empty.
 //
 type MethodArg struct {
-	basicDecl
+	decl
 	typ string
 }
 
 // NewMethodArg retusn a new MethodArg with the given name and type.
 //
 func NewMethodArg(name, typ string) *MethodArg {
-	return &MethodArg{
-		basicDecl{name},
-		typ,
-	}
+	return &MethodArg{decl{name}, typ}
 }
 
 // Type returns the receiver's type.
