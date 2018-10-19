@@ -98,10 +98,19 @@ func lc(s string) string {
 	return strings.ToLower(s)
 }
 
+func plus(a, b int) int {
+	return a + b
+
+	//	val1, _ := strconv.Atoi(a)
+	//	val2, _ := strconv.Atoi(b)
+	//	return fmt.Sprintf("%d", val1+val2)
+}
+
 var cppTemplateFuncs = map[string]interface{}{
 	"argtype":  argType,
 	"basename": basename,
 	"cpptype":  cppType,
 	"lc":       lc,
+	"plus":     plus,
 	"restype":  resType,
 }

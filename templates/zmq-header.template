@@ -1,56 +1,57 @@
 // -*- mode:go-template -*-
+//
 // ridl: output:"%s.h"
+
+// -*- mode:c++ -*-
 
 // Generated from {{.Filename}} {{.BuildTime}}
 
-// #include <zmq.h>
+#include <zmq.h>
 
-#include <array>
-#include <cstdint>
-#include <stdexcept>
-#include <string>
-#include <vector>
-{{range .Imports -}}
-#include "{{.}}.hpp"
-{{- end}}
+#include "{{.PackageName}}.h"
+
 namespace {{.PackageName}}
 {
 
-{{range .Typedefs}}typedef {{.Alias}} {{.Name}};
-{{end}}
-{{range .Constants}}const {{cpptype .Type}} {{.Name}} = {{.Value}};
-{{end}}
-{{range .ArrayTypes}}{{if eq .Size 0}}typedef std::vector<{{cpptype .Type}}> {{.Name}};{{else}}typedef std::array<{{cpptype .Type}}, {{.Size}}> {{.Name}};
-{{end}}
-{{end}}
-{{range .StructTypes}}
-struct {{.Name}}
+namespace message
 {
-    {{- range .Fields}}
-    {{cpptype .Type}} _{{.Name}};
-    {{- end}}
-};
-{{end}}
-{{range .Interfaces -}}{{- range .Methods}}{{if .Results}}{{$n:=len .Results}}
-{{if eq $n 1}}{{$r:=index .Results 0}}using {{.Name}}_Result = {{cpptype $r.Type}};{{else}}struct {{.Name}}_Result {
-{{- range $index, $arg := .Results}}{{if $arg.Name}}
-    {{cpptype $arg.Type}} _{{$arg.Name}};{{else}}
-    {{cpptype $arg.Type}} _r{{$index}};{{- end}}
-{{- end}}
-};
-{{end}}
-{{end}}{{- end}}{{- end}}
-{{- range .Interfaces}}
-class {{.Name}}
-{
-public:
-    {{.Name}}() {}
-    virtual ~{{.Name}}() {}
-{{- range .Methods}}
-    virtual {{if .Results}}{{.Name}}_Result{{else}}void{{end}} {{.Name}}({{- range $index, $arg := .Args}}{{if eq $index 0}}{{else}}, {{end -}}
-    {{argtype $arg.Type}} {{- end}}) = 0;
-{{- end}}
-};
-{{end}}
-} // namespace {{.PackageName}}
 
+struct header {
+    uint32_t _msg;
+    uint32_t _size;
+};
+
+inline uint32_t code(uint16_t pkgid, uint16_t msgid) {
+    return uint32_t(pkgid)<<16|uint32_t(msgid);
+}
+
+inline header make_header(uint16_t pkgid, uint16_t msgid, size_t size) {
+    return header{code(pkgid, msgid), uint32_t(size)};
+}
+
+template <typename T>
+inline header make_header(uint16_t pkgid, uint16_t msgid) {
+    return make_header(pkgid, msgid, sizeof (T));
+}
+
+{{$msgid:=0}}
+{{range .Interfaces -}}
+{{$interface := .Name}}
+{{- range .Methods -}}
+const auto {{$interface}}_{{.Name}}_code = code(PackageID, {{$msgid}});
+{{$msgid = plus $msgid 1}}
+{{- end}}
+{{- end}}
+
+{{range .Interfaces -}}
+{{$interface := .Name}}
+{{- range .Methods -}}
+struct {{$interface}}_{{.Name}} {
+    header _header = make_header(PackageID, {{$interface}}_{{.Name}}_code, sizeof ({{$interface}}_{{.Name}}_Args));
+    {{$interface}}_{{.Name}}_Args _payload;
+};
+{{end}}
+{{end}}
+
+} // namespace message
+} // namespace {{.PackageName}}

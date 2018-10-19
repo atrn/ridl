@@ -1,5 +1,7 @@
 // -*- mode:go-template -*-
 
+// -*- mode:c++ -*-
+
 // Generated from {{.Filename}} {{.BuildTime}}
 
 #include <array>
@@ -68,13 +70,11 @@ using {{.Name}} = std::map<{{restype .KeyType}}, {{restype .Type}}>;
 {{range .Interfaces -}}
 {{$interface := .Name}}
 {{- range .Methods -}}
-{{- if.Args}}
 struct {{$interface}}_{{.Name}}_Args {
 {{- range $index, $arg := .Args}}
     {{restype $arg.Type}} _{{$arg.Name}};
 {{- end}}
 };
-{{end}}
 {{- if .Results}}
 {{$n := len .Results}}
 {{- if eq $n 1 -}}
