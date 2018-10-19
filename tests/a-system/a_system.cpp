@@ -61,6 +61,17 @@ public:
         return a_system::Service_PostImage_Result{++_id, no_error};
     }
 
+    a_system::Service_GetImage_Result GetImage(const std::string& key, const a_system::ImageID& id) override
+    {
+        check(key);
+        if (id == 0) {
+            const std::runtime_error error("image not found");
+            return a_system::Service_GetImage_Result{a_system::Image{}, error};
+        } else {
+            return a_system::Service_GetImage_Result{a_system::Image{}, no_error};
+        }
+    }
+
     void Reset() override
     {
         _key = "";

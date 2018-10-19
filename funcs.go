@@ -9,11 +9,18 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"strings"
 )
 
 func cpptype(fullType string, asArg bool) string {
+	result := func(t string) string {
+		if false {
+			log.Printf("cpptype %q -> %q", fullType, t)
+		}
+		return t
+	}
 	constref := func(t string) string {
 		return "const " + t + " &"
 	}
@@ -37,36 +44,36 @@ func cpptype(fullType string, asArg bool) string {
 	}
 	switch goType {
 	case "byte":
-		return "uint8_t" + arraySuffix
+		return result("uint8_t" + arraySuffix)
 	case "error":
 		if asArg {
-			return constref(rterror) + arraySuffix
+			return result(constref(rterror) + arraySuffix)
 		}
-		return rterror + arraySuffix
+		return result(rterror + arraySuffix)
 	case "string":
 		if asArg {
-			return constref(stdstr) + arraySuffix
+			return result(constref(stdstr) + arraySuffix)
 		}
-		return stdstr + arraySuffix
+		return result(stdstr + arraySuffix)
 	case "float32":
-		return "float" + arraySuffix
+		return result("float" + arraySuffix)
 	case "float64":
-		return "double" + arraySuffix
+		return result("double" + arraySuffix)
 	case "rune":
-		return "uint32_t" + arraySuffix
+		return result("uint32_t" + arraySuffix)
 	case "bool":
-		return goType + arraySuffix
+		return result(goType + arraySuffix)
 	case "int":
-		return goType + arraySuffix
+		return result(goType + arraySuffix)
 	case "uint":
-		return "unsigned int" + arraySuffix
+		return result("unsigned int" + arraySuffix)
 	case "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64":
-		return goType + "_t" + arraySuffix
+		return result(goType + "_t" + arraySuffix)
 	}
 	if asArg {
-		return constref(goType) + arraySuffix
+		return result(constref(goType) + arraySuffix)
 	}
-	return goType + arraySuffix
+	return result(goType + arraySuffix)
 }
 
 func cppType(t string) string {
@@ -122,10 +129,15 @@ func dims(t string) string {
 	return t[0 : end+1]
 }
 
+func isslice(t string) bool {
+	return strings.HasPrefix(t, "[]")
+}
+
 var cppTemplateFuncs = map[string]interface{}{
 	"argtype":  argType,
 	"basename": basename,
 	"cpptype":  cppType,
+	"isslice":  isslice,
 	"lc":       lc,
 	"plus":     plus,
 	"eltype":   eltype,

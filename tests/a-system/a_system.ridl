@@ -27,5 +27,6 @@ type Service interface {
 	Auth(token string, t Timestamp) (key string, err error)
 	GetServerTime(key string) (Timestamp, error)
 	PostImage(key string, image Image) (ImageID, error)
+	GetImage(key string, id ImageID) (Image, error)
 	Reset()
 }
