@@ -8,24 +8,46 @@ import (
 )
 
 // The Package type represents a single package, a named collection of
-// declarations, constants and types, and imported packages.
+// declarations, constants, types, and associated imported packages.
 //
-// A Package's Decls and Imports are in declaration order.
+// Decls and Imports are in declaration order.
 //
 type Package struct {
 	PackageName string
 	Decls       []Decl
 	Imports     []string
+	importIndex map[string]struct{} // aka set[string]
 }
 
-// NewPackage creates a new Package that has the given name.
-// The Package is created with a nil, not empty, Decls and
-// Imports arrays.
+// NewPackage creates a new Package that has the given name.  The
+// Package is created with a nil, as opposed to empty, Decls and
+// Imports slices.
 //
-func NewPackage(name string) *Package {
-	return &Package{
-		PackageName: name,
+func NewPackage(pkg *types.Package) *Package {
+	p := &Package{
+		PackageName: pkg.Name(),
+		importIndex: make(map[string]struct{}),
 	}
+
+	for _, imported := range pkg.Imports() {
+		p.Import(imported.Path())
+	}
+
+	scope := pkg.Scope()
+	names := scope.Names()
+	for i := 0; i < scope.Len(); i++ {
+		obj := scope.Lookup(names[i])
+		switch actual := obj.(type) {
+		case *types.Const:
+			p.Const(actual)
+		case *types.TypeName:
+			p.TypeName(actual)
+		default:
+			log.Printf("X1:  %T  ->  %#v\n", actual, actual)
+		}
+	}
+
+	return p
 }
 
 // Declare appends a Decl to the receiver's collection of declarations.
@@ -38,7 +60,10 @@ func (p *Package) Declare(decl Decl) {
 // collection of imports.
 //
 func (p *Package) Import(path string) {
-	p.Imports = append(p.Imports, path)
+	if _, exists := p.importIndex[path]; !exists {
+		p.Imports = append(p.Imports, path)
+		p.importIndex[path] = struct{}{}
+	}
 }
 
 // Const adds a declaration of a constant to the receiver.

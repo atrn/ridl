@@ -23,6 +23,7 @@ import (
 // Context adds meta-data and indices to simplify template organization.
 //
 type Context struct {
+	// Pointer to our Package
 	*Package
 	// The name of the file being processed.
 	Filename string
