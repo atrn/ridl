@@ -1,0 +1,6 @@
+package ridl_tests
+
+type Timestamp struct {
+     Secs uint64
+     Nanos uint32
+}

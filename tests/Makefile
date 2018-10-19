@@ -2,12 +2,13 @@
 
 ridl=../ridl
 templates=../templates
-format=clang-format-mp-5.0 --style=webkit -i
+clang_format?=clang-format-mp-6.0
+clang_format_args?=--style=webkit -i
 
 all test:
-	$(ridl) -t $(templates)/c++-header.template -o test.hpp
-	$(ridl) -t $(templates)/c++-source.template -o test.cpp
-	$(format) test.cpp test.hpp
+	$(ridl) -t $(templates)/c++-header.template -o tests.hpp
+	$(ridl) -t $(templates)/c++-source.template -o tests.cpp
+	$(clang_format) $(clang_format_args) *.cpp *.hpp
 
 clean:
 	rm -f *.cpp *.hpp

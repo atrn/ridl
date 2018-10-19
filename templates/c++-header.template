@@ -41,7 +41,7 @@ const {{cpptype .Type}} {{.Name}} = {{.Value}};
 {{range .StructTypes}}
 struct {{.Name}} {
 {{- range .Fields}}
-    {{restype .Type }} _{{.Name}};
+    {{$e:=eltype .Type}}{{cpptype $e}} _{{.Name}} {{dims .Type}};
 {{- end}}
 };
 {{end}}

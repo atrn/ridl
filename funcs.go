@@ -22,20 +22,18 @@ func cpptype(fullType string, asArg bool) string {
 		rterror = "std::runtime_error"
 	)
 	arraySuffix := ""
-	var goType string
+	goType := fullType
 	if fullType[0] == '[' {
-		// Array or slice
 		end := strings.Index(fullType, "]")
 		if end == -1 {
-			panic("malformed type")
+			panic("malformed type: " + fullType)
 		}
-		arraySuffix, goType = fullType[0:end+1], fullType[end+1:]
+		arraySuffix = fullType[0 : end+1]
+		goType = fullType[end+1:]
 		if asArg || arraySuffix == "[]" {
 			// slice -> pointer to T
 			arraySuffix = " *"
 		}
-	} else {
-		goType = fullType
 	}
 	switch goType {
 	case "byte":
@@ -80,12 +78,12 @@ func argType(t string) string {
 }
 
 func resType(t string) string {
-	t = cpptype(t, false)
-	if strings.HasSuffix(t, " *") {
-		t = strings.TrimSuffix(t, " *")
-		t = fmt.Sprintf("std::vector<%s>", t)
+	c := cpptype(t, false)
+	if strings.HasSuffix(c, " *") {
+		c = strings.TrimSuffix(c, " *")
+		c = fmt.Sprintf("std::vector<%s>", c)
 	}
-	return t
+	return c
 }
 
 func basename(path string) string {
@@ -100,10 +98,28 @@ func lc(s string) string {
 
 func plus(a, b int) int {
 	return a + b
+}
 
-	//	val1, _ := strconv.Atoi(a)
-	//	val2, _ := strconv.Atoi(b)
-	//	return fmt.Sprintf("%d", val1+val2)
+func eltype(t string) string {
+	if t[0] != '[' {
+		return t
+	}
+	end := strings.Index(t, "]")
+	if end == -1 {
+		panic("malformed type: " + t)
+	}
+	return t[end+1:]
+}
+
+func dims(t string) string {
+	if t[0] != '[' {
+		return ""
+	}
+	end := strings.Index(t, "]")
+	if end == -1 {
+		panic("malformed type: " + t)
+	}
+	return t[0 : end+1]
 }
 
 var cppTemplateFuncs = map[string]interface{}{
@@ -112,5 +128,7 @@ var cppTemplateFuncs = map[string]interface{}{
 	"cpptype":  cppType,
 	"lc":       lc,
 	"plus":     plus,
+	"eltype":   eltype,
 	"restype":  resType,
+	"dims":     dims,
 }
