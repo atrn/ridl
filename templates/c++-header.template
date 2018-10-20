@@ -34,23 +34,6 @@ const {{cpptype .Type}} {{.Name}} = {{.Value}};
 {{- end}}
 {{- end}}
 
-{{- if .StructTypes}}
-
-// Structs
-
-{{range .StructTypes}}
-struct {{.Name}} {
-{{- range .Fields}}
-    {{- if isslice .Type}}
-    {{$t:=eltype .Type}}std::vector<{{$t}}>  _{{.Name}};
-    {{- else -}}
-    {{$t:=eltype .Type}}{{restype $t}} _{{.Name}} {{dims .Type}};
-    {{- end}}
-{{- end}}
-};
-{{end}}
-{{- end}}
-
 {{- if .ArrayTypes}}
 
 // Arrays
@@ -67,6 +50,23 @@ using {{.Name}} = {{if eq .Size 0}}std::vector<{{cpptype .ElemType}}>{{else}}std
 {{- range .MapTypes}}
 using {{.Name}} = std::map<{{restype .KeyType}}, {{restype .Type}}>;
 {{- end}}
+{{- end}}
+
+{{- if .StructTypes}}
+
+// Structs
+
+{{range .StructTypes}}
+struct {{.Name}} {
+{{- range .Fields}}
+    {{- if isslice .Type}}
+    {{$t:=eltype .Type}}std::vector<{{$t}}>  _{{.Name}};
+    {{- else -}}
+    {{$t:=eltype .Type}}{{restype $t}} _{{.Name}} {{dims .Type}};
+    {{- end}}
+{{- end}}
+};
+{{end}}
 {{- end}}
 
 {{- if .Interfaces}}

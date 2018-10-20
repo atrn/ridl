@@ -33,6 +33,8 @@ type Context struct {
 	Username string
 	// The name of the host where processing is running.
 	Hostname string
+	// All decls in order
+	Decls []Decl
 	// The basic alias types, "typedefs", "type <ident> <type>"...
 	Typedefs []*TypedefDecl
 	// The array and slice types.
@@ -64,6 +66,7 @@ func NewContext(filename string, pkg *Package) *Context {
 		BuildTime:   time.Now(),
 		Username:    username,
 		Hostname:    hostname,
+		Decls:       pkg.Decls,
 		Typedefs:    make([]*TypedefDecl, 0),
 		ArrayTypes:  make([]*ArrayDecl, 0),
 		MapTypes:    make([]*MapDecl, 0),

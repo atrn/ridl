@@ -4,14 +4,21 @@ package a_system
 
 const PackageID uint16 = 0xca5e
 
-type Sync uint64
-
 type Timestamp struct {
 	Secs  uint64
 	Nanos uint32 // [0, 999999999]
 }
 
-type Pixel uint32
+type Pixel [4]byte
+
+type ColorComponent int
+
+const (
+	RedComponent ColorComponent = iota
+	GreenComponent
+	BlueComponent
+	AlphaComponent
+)
 
 type Image struct {
 	Time          Timestamp
@@ -23,10 +30,10 @@ type ImageID uint64
 
 type Service interface {
 	Noop()
+	Reset()
 	Hello(name string) (message string, err error)
 	Auth(token string, t Timestamp) (key string, err error)
 	GetServerTime(key string) (Timestamp, error)
 	PostImage(key string, image Image) (ImageID, error)
 	GetImage(key string, id ImageID) (Image, error)
-	Reset()
 }

@@ -2,6 +2,10 @@
 
 package ridl_tests
 
+type Point struct {
+	x, y Coord
+}
+
 type IntPair [2]int
 type Vec [3]Coord
 type Samples []float32

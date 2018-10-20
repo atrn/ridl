@@ -2,9 +2,5 @@
 
 package ridl_tests
 
-type Point struct {
-	x, y Coord
-}
-
 type Empty struct {
 }

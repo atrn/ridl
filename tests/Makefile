@@ -12,4 +12,5 @@ all test:
 	dmake
 
 clean:
-	dmake clean; rm -f *.cpp *.hpp
+	dmake clean; rm -f *.cpp *.hpp; $(MAKE) --no-print-directory -C a-system clean
+

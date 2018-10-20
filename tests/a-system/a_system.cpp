@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #include "a_system_messages.h"
 
 namespace
@@ -84,6 +86,11 @@ void run(a_system::Service &service)
 
 int main()
 {
+    {
+        auto m = a_system::message::Service_Reset{};
+        printf("0x%x\n", m._header._msg);
+    }
+
     service_impl service("123");
     run(service);
 }
