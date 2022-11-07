@@ -34,3 +34,9 @@ func (s *StringSlice) Set(val string) error {
 func (s *StringSlice) Slice() []string {
 	return *s
 }
+
+// Len returns the number of strings in the receiver
+//
+func (s *StringSlice) Len() int {
+	return len(*s)
+}

@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,9 @@ import (
 // and returns its full path.
 //
 func FindTemplate(filename string) string {
+	if *debugFlag {
+		log.Printf("looking for template %q", filename)
+	}
 	fileexists := func(path string) (string, bool) {
 		try := func(path string) (string, bool) {
 			if info, err := os.Stat(path); err == nil {
@@ -63,7 +67,7 @@ func ExpandTemplate(filename string, context *Context, w io.Writer) error {
 	if tfilename := FindTemplate(filename); tfilename != "" {
 		filename = tfilename
 	} else {
-		return fmt.Errorf("%s: %s", filename, os.ErrNotExist)
+		return fmt.Errorf("ExpandTemplate %q: %w", filename, os.ErrNotExist)
 	}
 	t := template.New(filepath.Base(filename)).Funcs(cppTemplateFuncs)
 	if t, err := ParseTemplates(t, filename); err != nil {
@@ -82,7 +86,7 @@ func ExpandTemplate(filename string, context *Context, w io.Writer) error {
 func ParseTemplates(t *template.Template, filename string) (*template.Template, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ParseTemplate %q: %w", filename, err)
 	}
 	defer file.Close()
 	in := bufio.NewScanner(file)
@@ -118,7 +122,7 @@ func GetEmbeddedOutputFilename(context *Context, filename string) (string, error
 		switch fields[0] {
 		case "output":
 			if hadOutputSpec {
-				return fname, fmt.Errorf("%s: multiple output specifications", filename)
+				return fname, fmt.Errorf("%q: file contains multiple output specifications", filename)
 			}
 			hadOutputSpec = true
 			text := strings.TrimSpace(comment[len(fields[0]):])
@@ -133,7 +137,7 @@ func GetEmbeddedOutputFilename(context *Context, filename string) (string, error
 func ParseComments(filename string) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ParseComments %q: %w", filename, err)
 	}
 	defer file.Close()
 	var lines []string

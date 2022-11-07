@@ -47,6 +47,10 @@ type Context struct {
 	Interfaces []*InterfaceDecl
 	// Constants.
 	Constants []*ConstDecl
+	// Enums.
+	Enums []*Enum
+	// NotEnums - constants that are not in Enums.
+	NotEnums []*ConstDecl
 }
 
 // NewContext returns a new Context for the given file and Package.
@@ -73,9 +77,9 @@ func NewContext(filename string, pkg *Package) *Context {
 		StructTypes: make([]*StructDecl, 0),
 		Interfaces:  make([]*InterfaceDecl, 0),
 		Constants:   make([]*ConstDecl, 0),
+		Enums:       make([]*Enum, 0),
 	}
 	for _, decl := range pkg.Decls {
-		// log.Printf("%T", decl)
 		switch d := decl.(type) {
 		case *ConstDecl:
 			context.Constants = append(context.Constants, d)
@@ -93,5 +97,44 @@ func NewContext(filename string, pkg *Package) *Context {
 			panic(fmt.Sprintf("unexpected Decl type: %T", d))
 		}
 	}
+	context.findEnums()
 	return context
+}
+
+func isInteger(typ string) bool {
+	integralTypes := map[string]struct{}{
+		"byte":   struct{}{},
+		"uint8":  struct{}{},
+		"uint16": struct{}{},
+		"uint32": struct{}{},
+		"uint64": struct{}{},
+		"int8":   struct{}{},
+		"int16":  struct{}{},
+		"int32":  struct{}{},
+		"int64":  struct{}{},
+		"int":    struct{}{},
+	}
+	_, isInt := integralTypes[typ]
+	return isInt
+}
+
+func (c *Context) findEnums() {
+	typedefs := make(map[string]*TypedefDecl, len(c.Typedefs))
+	for _, t := range c.Typedefs {
+		if isInteger(t.Alias) {
+			typedefs[t.Name()] = t
+		}
+	}
+	m := make(map[*TypedefDecl][]*ConstDecl)
+	for _, constant := range c.Constants {
+		t, found := typedefs[constant.Type()]
+		if found {
+			m[t] = append(m[t], constant)
+		} else {
+			c.NotEnums = append(c.NotEnums, constant)
+		}
+	}
+	for typedef, constants := range m {
+		c.Enums = append(c.Enums, &Enum{typedef, constants})
+	}
 }

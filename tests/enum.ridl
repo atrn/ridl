@@ -1,0 +1,16 @@
+// -*- go -*-
+
+package enums
+
+type EType int
+
+const (
+	A EType = iota
+	B
+	C
+	D
+)
+
+const (
+	NotE int = 2
+)

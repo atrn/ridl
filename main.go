@@ -54,7 +54,7 @@ func main() {
 		}
 	}
 
-	if !isDir(*templatesDir) {
+	if templateNames.Len() > 0 && !isDir(*templatesDir) {
 		log.Fatalf("%s: Not found or not a directory", *templatesDir)
 	}
 

@@ -1,0 +1,14 @@
+// -*- mode:go-template -*-
+
+{{range .Enums }}
+enum class {{.Typedef.Name}} : {{.Typedef.Alias}}
+{
+{{- range .Constants}}
+    {{.Name}} = {{.Value}},
+{{- end}}
+};
+{{end}}
+
+{{range .NotEnums}}
+const {{.Type}} {{.Name}} = {{.Value}};
+{{end}}

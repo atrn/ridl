@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"reflect"
 	"strings"
 )
 
@@ -133,14 +134,25 @@ func isslice(t string) bool {
 	return strings.HasPrefix(t, "[]")
 }
 
+func sizeof(any interface{}) int {
+	t := reflect.TypeOf(any)
+	return int(t.Size())
+}
+
+func offsetof(st *StructDecl, sf *StructField) int {
+	return 0
+}
+
 var cppTemplateFuncs = map[string]interface{}{
 	"argtype":  argType,
 	"basename": basename,
 	"cpptype":  cppType,
-	"isslice":  isslice,
-	"tolower":  tolower,
-	"plus":     plus,
-	"eltype":   eltype,
-	"restype":  resType,
 	"dims":     dims,
+	"eltype":   eltype,
+	"isslice":  isslice,
+	"offsetof": offsetof,
+	"plus":     plus,
+	"restype":  resType,
+	"sizeof":   sizeof,
+	"tolower":  tolower,
 }

@@ -8,18 +8,23 @@
 package main
 
 import (
+	"fmt"
 	"go/ast"
 	"go/importer"
 	"go/parser"
 	"go/token"
 	"go/types"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 func ridlDir(path string, outputSpec string, templateNames []string) error {
+	if *debugFlag {
+		log.Printf("Parsing .ridl files from directory %q", path)
+	}
 	paths, err := filepath.Glob(filepath.Join(path, "*.ridl"))
 	if err != nil {
 		return err
@@ -32,6 +37,9 @@ func ridlDir(path string, outputSpec string, templateNames []string) error {
 }
 
 func ridlFile(path string, outputSpec string, templateNames []string) error {
+	if *debugFlag {
+		log.Printf("Parsing .ridl file %q", path)
+	}
 	pkg, err := parseFiles([]string{path})
 	if err == nil {
 		err = generateOutput(pkg, path, templateNames, outputSpec)
@@ -45,7 +53,7 @@ func parseFiles(paths []string) (*Package, error) {
 	for _, path := range paths {
 		file, err := parser.ParseFile(fset, path, nil, 0)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("parse %q: %w", path, err)
 		}
 		files = append(files, file)
 	}
@@ -56,18 +64,25 @@ func parseFiles(paths []string) (*Package, error) {
 	}
 	pkg, err := conf.Check("", fset, files, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("type check %v: %w", paths, err)
+	}
+
+	if *debugFlag {
+		log.Printf("parsed files %q ok", paths)
 	}
 
 	return NewPackage(pkg), nil
 }
 
 func generateOutput(pkg *Package, path string, templateNames []string, outputFilename string) error {
+	if *debugFlag {
+		log.Printf("generating output with templates %q, output spec %q", templateNames, outputFilename)
+	}
 	templateContext := NewContext(path, pkg)
 	for _, templateName := range templateNames {
 		w, err := getOutput(path, templateName, outputFilename)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to determine output path for template %q: %w", templateName, err)
 		}
 		err = ExpandTemplate(templateName, templateContext, w)
 		err2 := w.Close()
