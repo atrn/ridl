@@ -16,8 +16,8 @@ import (
 
 func cpptype(fullType string, asArg bool) string {
 	result := func(t string) string {
-		if false {
-			log.Printf("cpptype %q -> %q", fullType, t)
+		if *debugFlag {
+			log.Printf("DEBUG: cpptype %q -> %q", fullType, t)
 		}
 		return t
 	}
@@ -44,7 +44,7 @@ func cpptype(fullType string, asArg bool) string {
 	}
 	switch goType {
 	case "byte":
-		return result("uint8_t" + arraySuffix)
+		return result("std::byte" + arraySuffix)
 	case "error":
 		if asArg {
 			return result(constref(rterror) + arraySuffix)
@@ -99,7 +99,7 @@ func basename(path string) string {
 	return path
 }
 
-func lc(s string) string {
+func tolower(s string) string {
 	return strings.ToLower(s)
 }
 
@@ -138,7 +138,7 @@ var cppTemplateFuncs = map[string]interface{}{
 	"basename": basename,
 	"cpptype":  cppType,
 	"isslice":  isslice,
-	"lc":       lc,
+	"tolower":  tolower,
 	"plus":     plus,
 	"eltype":   eltype,
 	"restype":  resType,

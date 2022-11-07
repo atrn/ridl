@@ -19,16 +19,24 @@ import (
 	"strings"
 )
 
-func ridl(path string, outputSpec string, templateNames []string) error {
+func ridlDir(path string, outputSpec string, templateNames []string) error {
 	paths, err := filepath.Glob(filepath.Join(path, "*.ridl"))
 	if err != nil {
 		return err
 	}
-	if pkg, err := parseFiles(paths); err != nil {
-		return err
-	} else {
-		return generateOutput(pkg, path, templateNames, outputSpec)
+	pkg, err := parseFiles(paths)
+	if err == nil {
+		err = generateOutput(pkg, path, templateNames, outputSpec)
 	}
+	return err
+}
+
+func ridlFile(path string, outputSpec string, templateNames []string) error {
+	pkg, err := parseFiles([]string{path})
+	if err == nil {
+		err = generateOutput(pkg, path, templateNames, outputSpec)
+	}
+	return err
 }
 
 func parseFiles(paths []string) (*Package, error) {

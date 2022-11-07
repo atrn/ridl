@@ -17,8 +17,9 @@ import (
 
 var (
 	templateNames  = NewStringSlice()
-	outputFilename = flag.String("o", "", "write output to `filename`")
+	outputFilename = flag.String("o", "", "write output to `filename` ('-' means stdout)")
 	templatesDir   = flag.String("D", "", "search for templates in `dir`")
+	debugFlag      = flag.Bool("debug", false, "enable debug output")
 )
 
 func main() {
@@ -28,29 +29,46 @@ func main() {
 	log.SetPrefix(myname + ": ")
 
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "usage:", myname, "[options] [path]")
+		fmt.Fprintln(os.Stderr, "usage:", myname, "[options] path")
 		flag.PrintDefaults()
 	}
+
+	versionFlag := flag.Bool("version", false, "output version and exit")
 	flag.Var(templateNames, "t", "generate output using `template`")
 
 	flag.Parse()
 
-	if *templatesDir == "" {
-		*templatesDir = filepath.Clean(filepath.Join(filepath.Dir(os.Args[0]), "../lib/ridl"))
+	if *versionFlag {
+		fmt.Print(versionNumber)
+		os.Exit(0)
 	}
 
-	process := func(path, output string) {
-		err := ridl(path, output, templateNames.Slice())
-		if err != nil {
-			log.Fatal(err)
+	if flag.NArg() < 1 {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	if *templatesDir == "" {
+		if *templatesDir = os.Getenv("RIDL_TEMPLATES_DIR"); *templatesDir == "" {
+			*templatesDir = filepath.Clean(filepath.Join(filepath.Dir(os.Args[0]), "../lib/ridl"))
 		}
 	}
 
-	if flag.NArg() == 0 {
-		process(getcwd(), *outputFilename)
-	} else {
-		for _, path := range flag.Args() {
-			process(path, filepath.Join(path, *outputFilename))
+	if !isDir(*templatesDir) {
+		log.Fatalf("%s: Not found or not a directory", *templatesDir)
+	}
+
+	for _, path := range flag.Args() {
+		var err error
+		if isDir(path) {
+			outputSpec := filepath.Join(path, *outputFilename)
+			err = ridlDir(path, outputSpec, templateNames.Slice())
+		} else {
+			outputSpec := filepath.Join(filepath.Dir(path), *outputFilename)
+			err = ridlFile(path, outputSpec, templateNames.Slice())
+		}
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 }
@@ -61,4 +79,9 @@ func getcwd() string {
 		log.Fatal(err)
 	}
 	return path
+}
+
+func isDir(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.IsDir()
 }

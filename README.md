@@ -28,7 +28,7 @@ messages.
 ## What ridl doesn't do
 
 Being based on Go means ridl has no unions and offers no direct
-support for interfsce versioning.
+support for interface versioning.
 
 ## Interface Descriptions
 
@@ -44,6 +44,30 @@ go).
 
 Packages may be used in template expansion. The C++ template uses the
 Go package to name a C++ namespace.
+
+## Invoking `ridl`
+
+Basic usage is,
+
+`ridl` _options_ _[_ _filename... _]_
+
+If no input files are named on the command line `ridl` reads all files
+with the extension `.ridl` in the current directory.  If one, or more,
+files are named on the command line only those files are processed.
+
+### Options
+- -t _template_  
+Use _template_ to generate output.  More than one template may be used
+in which case 
+- -o _filename_  
+Write output to _filename_.  The _filename_ `-` represents the
+standard output.
+- -D _directory_  
+Read template files from _directory_.
+- -version  
+Output ridl version and exit.
+- -debug  
+Enable debug output.
 
 ## Interface Types
 
@@ -86,12 +110,29 @@ but depend on the underlying code generator and target environment.
 
 ### Template Context
 
-... define Context here so people can write templates!
+TBD.
 
-### Template functions
-
-#### cpptype
+### Template Functions
 
 #### argtype
-
+Returns a string with the C++ type corresponding to the given Go
+type when a value of that type is used an argument to a function.
 #### basename
+Returns the base filename for a given pathname **without** any
+extension.
+#### cpptype
+Returns a string with the C++ type corresponding to the given
+Go type.
+#### isslice
+Determines if a Go type is a slice, i.e. if the Go type name
+starts with the sequence `[]`.
+#### tolower
+Returns the lower case version of a string.
+#### plus
+Returns the sum of two integers.
+#### eltype
+Returns the element type of an array or slice type.
+#### restype
+Returns the C++ type to be used as a function result.
+#### dims
+TBD.
