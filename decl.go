@@ -11,8 +11,8 @@ import "fmt"
 
 //  ================================================================
 
-// The Decl interface is used to retrieve information about
-// declarations, their name and type.
+// The Decl interface is used to retrieve information common
+// to all declarations, their name and type.
 //
 type Decl interface {
 	// The Name method returns the name of the receiver, an
@@ -28,7 +28,7 @@ type Decl interface {
 //  ================================================================
 
 // The decl struct holds data common to all declarations.  The
-// decl type is be embedded in declaration types.
+// decl type is embedded in declaration types.
 //
 type decl struct {
 	name string
@@ -228,7 +228,7 @@ func (decl *MapDecl) Type() string {
 //
 type InterfaceDecl struct {
 	decl
-	Methods []*Method
+	Methods []*MethodDecl
 	Embeds  []string
 }
 
@@ -247,7 +247,7 @@ func (decl *InterfaceDecl) Type() string {
 
 // Declare appends a method declaration to the interface.
 //
-func (decl *InterfaceDecl) Declare(method *Method) {
+func (decl *InterfaceDecl) Declare(method *MethodDecl) {
 	decl.Methods = append(decl.Methods, method)
 }
 
@@ -259,12 +259,11 @@ func (decl *InterfaceDecl) Embed(n string) {
 
 //  ================================================================
 
-// The Method type represents a method declared within an interface.
-// A method has a name and zero or more arguments, represented by
-// MethodArg values, and zero of results, also represented by
-// MethodArg values.
+// The MethodDecl type represents a method declared within an interface.
+// A method has a name, zero or more arguments and zero or more results.
+// Both arguments and results are represented by MethodArg values.
 //
-type Method struct {
+type MethodDecl struct {
 	decl
 	Args    []*MethodArg
 	Results []*MethodArg
@@ -273,13 +272,13 @@ type Method struct {
 // NewMethod returns a new Method with the given name, arguments
 // and results.
 //
-func NewMethod(name string, args []*MethodArg, results []*MethodArg) *Method {
-	return &Method{decl{name}, args, results}
+func NewMethod(name string, args []*MethodArg, results []*MethodArg) *MethodDecl {
+	return &MethodDecl{decl{name}, args, results}
 }
 
 // Type returns the receiver's type.
 //
-func (decl *Method) Type() string {
+func (decl *MethodDecl) Type() string {
 	return "func " + decl.Name()
 }
 
