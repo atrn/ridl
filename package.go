@@ -8,11 +8,12 @@ import (
 	"strings"
 )
 
+var sizer = types.SizesFor("gc", "amd64")
+
 // The Package type represents a single package, a named collection of
 // declarations, constants, types, and associated imported packages.
 //
 // Decls and Imports are in declaration order.
-//
 type Package struct {
 	PackageName string
 	Decls       []Decl
@@ -20,10 +21,21 @@ type Package struct {
 	importIndex map[string]struct{} // aka set[string]
 }
 
+func sizeofType(t types.Type) int {
+	return int(sizer.Sizeof(t))
+}
+
+func alignof(t types.Type) int {
+	if t == nil {
+		return 0
+	}
+	// return int(sizes.Alignof(t))
+	return 0
+}
+
 // NewPackage creates a new Package that has the given name.  The
 // Package is created with a nil, as opposed to empty, Decls and
 // Imports slices.
-//
 func NewPackage(pkg *types.Package) *Package {
 	p := &Package{
 		PackageName: pkg.Name(),
@@ -34,10 +46,6 @@ func NewPackage(pkg *types.Package) *Package {
 		p.Import(imported.Path())
 	}
 
-	// scope := pkg.Scope()
-	// names := scope.Names()
-	//	for i := 0; i < scope.Len(); i++ {
-	//		obj := scope.Lookup(names[i])
 	for _, obj := range objectsInDeclarationOrder(pkg) {
 		switch actual := obj.(type) {
 		case *types.Const:
@@ -45,7 +53,9 @@ func NewPackage(pkg *types.Package) *Package {
 		case *types.TypeName:
 			p.TypeName(actual)
 		default:
-			log.Printf("X1:  %T  ->  %#v\n", actual, actual)
+			if *debugFlag {
+				log.Printf("X1:  %T  ->  %#v\n", actual, actual)
+			}
 		}
 	}
 
@@ -53,14 +63,12 @@ func NewPackage(pkg *types.Package) *Package {
 }
 
 // Declare appends a Decl to the receiver's collection of declarations.
-//
 func (p *Package) Declare(decl Decl) {
 	p.Decls = append(p.Decls, decl)
 }
 
 // Import appends the name of an imported package to the receiver's
 // collection of imports.
-//
 func (p *Package) Import(path string) {
 	if _, exists := p.importIndex[path]; !exists {
 		p.Imports = append(p.Imports, path)
@@ -69,14 +77,18 @@ func (p *Package) Import(path string) {
 }
 
 // Const adds a declaration of a constant to the receiver.
-//
 func (p *Package) Const(obj *types.Const) {
-	p.Declare(NewConstDecl(obj.Name(), cleanTypename(obj.Type()), obj.Val().ExactString()))
+	typ := cleanTypename(obj.Type())
+	val := obj.Val().ExactString()
+	d := NewConstDecl(obj.Name(), typ, val)
+	p.Declare(d)
 }
 
 // TypeName adds a type declaration to the receiver.
-//
 func (p *Package) TypeName(obj *types.TypeName) {
+	if *debugFlag {
+		log.Printf("%s: %d", obj.Type().String(), sizer.Sizeof(obj.Type()))
+	}
 	switch t := obj.Type().Underlying().(type) {
 	case *types.Array:
 		p.Array(obj.Name(), t)
@@ -96,7 +108,6 @@ func (p *Package) TypeName(obj *types.TypeName) {
 }
 
 // Map adds a map declaration to the reciever.
-//
 func (p *Package) Map(name string, obj *types.Map) {
 	keytyp := obj.Key().String()
 	valtyp := obj.Elem().String()
@@ -104,35 +115,38 @@ func (p *Package) Map(name string, obj *types.Map) {
 }
 
 // Slice adds a slice declaration to the receiver.
-//
 func (p *Package) Slice(name string, obj *types.Slice) {
 	typ := obj.Elem().String()
-	p.Declare(NewArrayDecl(name, typ, 0))
+	p.Declare(NewArrayDecl(name, typ, 0, sizer.Sizeof(obj.Elem())))
 }
 
 // Array adds an array declaration to the receiver.
-//
 func (p *Package) Array(name string, obj *types.Array) {
-	size := obj.Len()
+	length := obj.Len()
 	typ := obj.Elem().String()
-	p.Declare(NewArrayDecl(name, typ, int(size)))
+	size := sizer.Sizeof(obj)
+	p.Declare(NewArrayDecl(name, typ, int(length), size))
 }
 
 // Struct adds a struct declaration to the receiver.
-//
 func (p *Package) Struct(name string, obj *types.Struct) {
-	astruct := NewStructDecl(name)
+	decl := NewStructDecl(name, sizer.Sizeof(obj))
+	fields := make([]*types.Var, obj.NumFields())
 	for i := 0; i < obj.NumFields(); i++ {
-		avar := obj.Field(i)
-		if avar.Anonymous() {
-			// fixme - should ridl allow embedding?
-			//
+		fields[i] = obj.Field(i)
+	}
+	offsets := sizer.Offsetsof(fields)
+	for i := 0; i < obj.NumFields(); i++ {
+		field := fields[i]
+		if field.Anonymous() {
+			// TODO: allow embedding
 			continue
 		}
-		f := NewStructField(avar.Name(), avar.Type().String())
-		astruct.AddField(f)
+		typ := field.Type()
+		f := NewStructField(field.Name(), typ.String(), sizer.Sizeof(typ), offsets[i], sizer.Alignof(typ))
+		decl.AddField(f)
 	}
-	p.Declare(astruct)
+	p.Declare(decl)
 }
 
 func makeMethodArgs(args *types.Tuple, prefix string) []*MethodArg {
@@ -149,7 +163,6 @@ func makeMethodArgs(args *types.Tuple, prefix string) []*MethodArg {
 }
 
 // Interface adds an interface declaration to the receiver.
-//
 func (p *Package) Interface(name string, obj *types.Interface) {
 	xi := NewInterfaceDecl(name)
 	for i := 0; i < obj.NumMethods(); i++ {
@@ -164,7 +177,6 @@ func (p *Package) Interface(name string, obj *types.Interface) {
 }
 
 // Typedef adds a type alias declaration to the receiver.
-//
 func (p *Package) Typedef(name string, obj *types.Basic) {
 	p.Declare(NewTypedefDecl(name, obj.String()))
 }

@@ -21,7 +21,6 @@ import (
 // package names.
 //
 // Context adds meta-data and indices to simplify template organization.
-//
 type Context struct {
 	// Pointer to our Package
 	*Package
@@ -54,7 +53,6 @@ type Context struct {
 }
 
 // NewContext returns a new Context for the given file and Package.
-//
 func NewContext(filename string, pkg *Package) *Context {
 	username := "unknown"
 	hostname := "localhost"
@@ -103,16 +101,16 @@ func NewContext(filename string, pkg *Package) *Context {
 
 func isInteger(typ string) bool {
 	integralTypes := map[string]struct{}{
-		"byte":   struct{}{},
-		"uint8":  struct{}{},
-		"uint16": struct{}{},
-		"uint32": struct{}{},
-		"uint64": struct{}{},
-		"int8":   struct{}{},
-		"int16":  struct{}{},
-		"int32":  struct{}{},
-		"int64":  struct{}{},
-		"int":    struct{}{},
+		"byte":   {},
+		"uint8":  {},
+		"uint16": {},
+		"uint32": {},
+		"uint64": {},
+		"int8":   {},
+		"int16":  {},
+		"int32":  {},
+		"int64":  {},
+		"int":    {},
 	}
 	_, isInt := integralTypes[typ]
 	return isInt

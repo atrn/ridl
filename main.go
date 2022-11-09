@@ -61,11 +61,9 @@ func main() {
 	for _, path := range flag.Args() {
 		var err error
 		if isDir(path) {
-			outputSpec := filepath.Join(path, *outputFilename)
-			err = ridlDir(path, outputSpec, templateNames.Slice())
+			err = ridlDir(path, makeOutputSpec(path), templateNames.Slice())
 		} else {
-			outputSpec := filepath.Join(filepath.Dir(path), *outputFilename)
-			err = ridlFile(path, outputSpec, templateNames.Slice())
+			err = ridlFile(path, makeOutputSpec(filepath.Dir(path)), templateNames.Slice())
 		}
 		if err != nil {
 			log.Fatal(err)
@@ -73,12 +71,11 @@ func main() {
 	}
 }
 
-func getcwd() string {
-	path, err := os.Getwd()
-	if err != nil { // unexpected but possible
-		log.Fatal(err)
+func makeOutputSpec(dir string) string {
+	if *outputFilename == "-" {
+		return "-"
 	}
-	return path
+	return filepath.Join(dir, *outputFilename)
 }
 
 func isDir(path string) bool {

@@ -13,38 +13,51 @@ import "fmt"
 
 // The Decl interface is used to retrieve information common
 // to all declarations, their name and type.
-//
 type Decl interface {
 	// The Name method returns the name of the receiver, an
 	// unqualified Go identifer.
 	//
 	Name() string
 
-	// The Type method returns the reciever's Go type as a string.
+	// The Type method returns the receiver's Go type as a string.
 	//
 	Type() string
+}
+
+type SizedDecl interface {
+	Decl
+	Size() int64
 }
 
 //  ================================================================
 
 // The decl struct holds data common to all declarations.  The
 // decl type is embedded in declaration types.
-//
 type decl struct {
 	name string
 }
 
 // Name returns the receiver's name, a Go identifier.
-//
-func (b *decl) Name() string {
-	return b.name
+func (d *decl) Name() string {
+	return d.name
+}
+
+type sizedDecl struct {
+	decl
+	size int64
+}
+
+func (d *sizedDecl) Size() int64 {
+	return d.size
 }
 
 //  ================================================================
 
-// The ConstDecl type represents a constant. A constant has a name,
-// type and value, all represented as strings.
-//
+// The ConstDecl type represents a constant. A constant has:
+// - a name
+// - a type
+// - a value
+// - a size
 type ConstDecl struct {
 	decl
 	typ   string
@@ -52,13 +65,11 @@ type ConstDecl struct {
 }
 
 // NewConstDecl returns a new ConstDecl with the given name, type and value.
-//
 func NewConstDecl(name, typ, value string) *ConstDecl {
 	return &ConstDecl{decl{name}, typ, value}
 }
 
 // Type returns the receiver's type.
-//
 func (decl *ConstDecl) Type() string {
 	return decl.typ
 }
@@ -67,7 +78,6 @@ func (decl *ConstDecl) Type() string {
 
 // A TypedefDecl records a type alias formed by a type declaration
 // of the form "type <identifier> <identifier>".
-//
 type TypedefDecl struct {
 	decl
 	Alias string
@@ -75,14 +85,12 @@ type TypedefDecl struct {
 
 // NewTypedefDecl returns a new TypdefDecl with the given
 // name and aliased type.
-//
 func NewTypedefDecl(name, alias string) *TypedefDecl {
 	return &TypedefDecl{decl{name}, alias}
 }
 
 // Type returns the receiver's type, the alias part of
 // the type declaration.
-//
 func (t *TypedefDecl) Type() string {
 	return t.Alias
 }
@@ -91,35 +99,30 @@ func (t *TypedefDecl) Type() string {
 
 // ArrayDecl rerpresents an array or slice declaration (a slice
 // being interpreted as an unbounded array).
-//
 type ArrayDecl struct {
-	decl
-	typ  string
-	size int // 0 means variable, i.e. a slice
+	sizedDecl
+	typ    string
+	length int // 0 means variable, i.e. a slice
 }
 
 // NewArrayDecl returns a new ArrayDecl with the supplied name,
 // element type and size. A size of 0 implies an unbounded
 // array, or vector, type.
-//
-func NewArrayDecl(name, typ string, size int) *ArrayDecl {
-	return &ArrayDecl{decl{name}, typ, size}
+func NewArrayDecl(name, typ string, length int, size int64) *ArrayDecl {
+	return &ArrayDecl{sizedDecl{decl{name}, size}, typ, length}
 }
 
-// Size returns the number of elements in the receiver.
-//
-func (a *ArrayDecl) Size() int {
-	return a.size
+// Length returns the number of elements in the receiver.
+func (a *ArrayDecl) Length() int {
+	return a.length
 }
 
 // ElemType returns the type of the elements.
-//
 func (a *ArrayDecl) ElemType() string {
 	return a.typ
 }
 
 // Type returns the receiver's type.
-//
 func (a *ArrayDecl) Type() string {
 	if a.size == 0 {
 		return "[]" + a.typ
@@ -132,27 +135,23 @@ func (a *ArrayDecl) Type() string {
 // The StructDecl type represents a struct type declaration. A struct
 // type has a name and zero or more fields, represented by StructField
 // values.
-//
 type StructDecl struct {
-	decl
+	sizedDecl
 	Fields []*StructField
 }
 
 // NewStructDecl returns a new, empty, StructDecl with the
 // given name.
-//
-func NewStructDecl(name string) *StructDecl {
-	return &StructDecl{decl{name}, nil}
+func NewStructDecl(name string, size int64) *StructDecl {
+	return &StructDecl{sizedDecl{decl{name}, size}, nil}
 }
 
 // AddField appends a field to the receiver's collection of fields.
-//
 func (decl *StructDecl) AddField(f *StructField) {
 	decl.Fields = append(decl.Fields, f)
 }
 
 // Type returns the receiver's type.
-//
 func (decl *StructDecl) Type() string {
 	return "struct " + decl.Name()
 }
@@ -162,31 +161,37 @@ func (decl *StructDecl) Type() string {
 // The StructField type represents a field within a structure.  Each
 // field has a name and a type. Embedded types are represented by
 // fields with an empty Name.
-//
 type StructField struct {
-	decl
-	typ string
-	Tag []StructFieldTag
+	sizedDecl
+	typ       string
+	Tag       []StructFieldTag
+	offset    int64
+	alignment int64
 }
 
 // NewStructField returns a new StructField with the given name and
 // type.
-//
-func NewStructField(name, typ string) *StructField {
-	return &StructField{decl{name}, typ, nil}
+func NewStructField(name, typ string, size, offset, alignment int64) *StructField {
+	return &StructField{sizedDecl{decl{name}, size}, typ, nil, offset, alignment}
 }
 
 // Type returns the receiver's type.
-//
 func (sf *StructField) Type() string {
 	return sf.typ
+}
+
+func (sf *StructField) Offset() int64 {
+	return sf.offset
+}
+
+func (sf *StructField) Alignment() int64 {
+	return sf.alignment
 }
 
 //  ================================================================
 
 // The StructFieldTag type represents a single tag applied to
 // the field of a struct.
-//
 type StructFieldTag struct {
 	Key   string
 	Value string
@@ -195,7 +200,6 @@ type StructFieldTag struct {
 //  ================================================================
 
 // MapDecl represents a map declaration.
-//
 type MapDecl struct {
 	decl
 	keytyp string
@@ -204,19 +208,16 @@ type MapDecl struct {
 
 // NewMapDecl returns a new MapDecl with the given name,
 // and key and value types.
-//
 func NewMapDecl(name, keytyp, valtyp string) *MapDecl {
 	return &MapDecl{decl{name}, keytyp, valtyp}
 }
 
 // KeyType returns the type, as a string, of the receiver's keys.
-//
 func (decl *MapDecl) KeyType() string {
 	return decl.keytyp
 }
 
 // Type returns the type of the receiver's values.
-//
 func (decl *MapDecl) Type() string {
 	return decl.valtyp
 }
@@ -225,7 +226,6 @@ func (decl *MapDecl) Type() string {
 
 // The InterfaceDecl type represents an interface type. An interface
 // is a, named, collection of zero or more Methods.
-//
 type InterfaceDecl struct {
 	decl
 	Methods []*MethodDecl
@@ -234,25 +234,21 @@ type InterfaceDecl struct {
 
 // NewInterfaceDecl returns a new, empty, InterfaceDecl with the
 // given name.
-//
 func NewInterfaceDecl(name string) *InterfaceDecl {
 	return &InterfaceDecl{decl{name}, nil, nil}
 }
 
 // Type returns the receiver's type.
-//
 func (decl *InterfaceDecl) Type() string {
 	return "interface " + decl.Name()
 }
 
 // Declare appends a method declaration to the interface.
-//
 func (decl *InterfaceDecl) Declare(method *MethodDecl) {
 	decl.Methods = append(decl.Methods, method)
 }
 
 // Embed appends an embedded interface to the interface.
-//
 func (decl *InterfaceDecl) Embed(n string) {
 	decl.Embeds = append(decl.Embeds, n)
 }
@@ -262,7 +258,6 @@ func (decl *InterfaceDecl) Embed(n string) {
 // The MethodDecl type represents a method declared within an interface.
 // A method has a name, zero or more arguments and zero or more results.
 // Both arguments and results are represented by MethodArg values.
-//
 type MethodDecl struct {
 	decl
 	Args    []*MethodArg
@@ -271,13 +266,11 @@ type MethodDecl struct {
 
 // NewMethod returns a new Method with the given name, arguments
 // and results.
-//
 func NewMethod(name string, args []*MethodArg, results []*MethodArg) *MethodDecl {
 	return &MethodDecl{decl{name}, args, results}
 }
 
 // Type returns the receiver's type.
-//
 func (decl *MethodDecl) Type() string {
 	return "func " + decl.Name()
 }
@@ -286,20 +279,17 @@ func (decl *MethodDecl) Type() string {
 
 // The MethodArg  type represents an  argument to  or a result  from a
 // Method. A MethodArg has a name and a type. The name may be empty.
-//
 type MethodArg struct {
 	decl
 	typ string
 }
 
 // NewMethodArg retusn a new MethodArg with the given name and type.
-//
 func NewMethodArg(name, typ string) *MethodArg {
 	return &MethodArg{decl{name}, typ}
 }
 
 // Type returns the receiver's type.
-//
 func (decl *MethodArg) Type() string {
 	return decl.typ
 }
