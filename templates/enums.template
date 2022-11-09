@@ -8,3 +8,7 @@ enum class {{.Typedef.Name}} : {{.Typedef.Alias}}
 {{- end}}
 };
 {{end}}
+
+{{range .NotEnums}}
+const {{.Type}} {{.Name}} = {{.Value}};
+{{end}}

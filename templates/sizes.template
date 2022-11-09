@@ -1,0 +1,18 @@
+// Constants
+{{range .Constants}}
+const {{cpptype .Type}} {{.Name}} = {{.Value}};
+{{end}}
+
+// Arrays
+{{range .ArrayTypes}}
+{{end}}
+
+// Structs
+{{range .StructTypes}}
+struct {{.Name}} // size {{.Size}}
+{
+{{- range .Fields}}
+    {{cpptype .Type}}	{{.Name}}; // @ {{.Offset}}, {{.Size}} bytes
+{{- end}}
+};
+{{end}}

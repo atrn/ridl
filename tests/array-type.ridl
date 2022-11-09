@@ -2,6 +2,8 @@
 
 package ridl_tests
 
+type Coord float32
+
 type Point struct {
 	x, y Coord
 }
