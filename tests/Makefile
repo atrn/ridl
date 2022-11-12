@@ -2,7 +2,7 @@
 
 ridl=../ridl
 templates=../templates
-clang_format_args?=--style=Microsoft -i
+clang_format_args?=--style=file -i
 
 all: test
 
