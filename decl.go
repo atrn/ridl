@@ -42,6 +42,8 @@ func (d *decl) Name() string {
 	return d.name
 }
 
+// The sizedDecl struct is a decl that has a size, in bytes.
+// It implements the SizedDecl interface.
 type sizedDecl struct {
 	decl
 	size int64
@@ -60,13 +62,14 @@ func (d *sizedDecl) Size() int64 {
 // - a size
 type ConstDecl struct {
 	decl
-	typ   string
-	Value string
+	typ        string
+	Value      string
+	ExactValue string
 }
 
 // NewConstDecl returns a new ConstDecl with the given name, type and value.
-func NewConstDecl(name, typ, value string) *ConstDecl {
-	return &ConstDecl{decl{name}, typ, value}
+func NewConstDecl(name, typ, value, exact string) *ConstDecl {
+	return &ConstDecl{decl{name}, typ, value, exact}
 }
 
 // Type returns the receiver's type.
@@ -129,10 +132,18 @@ func (a *ArrayDecl) ElemType() string {
 
 // Type returns the receiver's type.
 func (a *ArrayDecl) Type() string {
-	if a.size == 0 {
+	if a.length == 0 {
 		return "[]" + a.typ
 	}
-	return fmt.Sprintf("[%d]%s", a.size, a.typ)
+	return fmt.Sprintf("[%d]%s", a.length, a.typ)
+}
+
+func (a *ArrayDecl) IsVariableLength() bool {
+	return a.length == 0
+}
+
+func (a *ArrayDecl) IsFixedLength() bool {
+	return a.length != 0
 }
 
 // ================================================================

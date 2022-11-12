@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -57,7 +58,7 @@ type Context struct {
 // NewContext returns a new Context for the given file and Package.
 func NewContext(directory string, filenames []string, pkg *Package) *Context {
 	context := &Context{
-		RidlVersion: versionNumber,
+		RidlVersion: strings.TrimSpace(versionNumber),
 		Package:     pkg,
 		Directory:   directory,
 		Filenames:   filenames,

@@ -1,88 +1,87 @@
-// -*- mode:go-template -*-
+// ridl: -*- mode:go-template -*-
 
-Directory:      {{.Directory}}
-Package:        {{.PackageName}}
-Run:            {{.BuildTime}}
-User:           {{.Username}}
-Host:           {{.Hostname}}
+# Package `{{.PackageName}}`
 
+## Meta Data
+
+| Name | Value |
+| :--- | :--- |
+| Directory | {{.Directory}} |
+| Filenames | {{.Filenames}} |
+| PackageName | {{.PackageName}} |
+| BuildTime | {{.BuildTime}} |
+| User | {{.Username}} |
+| Host | {{.Hostname}} |
+| RidlVersion | {{.RidlVersion}} |
+
+## Imports
 {{if len .Imports}}
---------------------------------------------------------------------------------
-
-Imports:{{range .Imports}}
-                {{.}}
+{{- range .Imports}}
+- {{.}}
 {{end}}
-{{end}}
+{{- else}}
+- None
+{{- end}}
 
-{{if len .Decls}}
---------------------------------------------------------------------------------
+## Declarations
 
-Decls:
+| Name  | Type  |
+|:--|:--|
+{{- if len .Decls}}
 {{range .Decls -}}
-- {{.Name}} {{.GetType}} -> {{cpptype .GetType}}
+| {{.Name}} | `{{.Type}}` |
 {{end}}
+{{else}}
+| None ||
 {{end}}
 
-{{if len .Typedefs}}
---------------------------------------------------------------------------------
-
-Typedefs:
+## Typedefs
+| Name | Type | Alias |
+|:--|:--|:--|
+{{- if len .Typedefs}}
 {{range .Typedefs -}}
---------------------------------------------------------------------------------
-Name: {{.Name}}
-Type: {{.Type}}
-Alias: {{.Alias}}
+| {{.Name}} | {{.Type}} | {{.Alias}} |
 {{end}}
-{{end}}
-
-{{if len .ArrayTypes}}
---------------------------------------------------------------------------------
-
-Array Types:
-{{range .ArrayTypes}}
-* Name: {{.Name}}
-Type:: {{.Type}}
-Length: {{.Length}}
-Size:: {{.Size}}
-{{end}}
+{{else}}
+| None |||
 {{end}}
 
-{{if len .StructTypes}}
---------------------------------------------------------------------------------
+## Array Types
+| Name | Type | Length | Size(of) |
+| :--- | :--- | :----- | :------- |
+{{- if len .ArrayTypes}}
+{{range .ArrayTypes -}}
+| {{.Name}} | {{.Type}} | {{.Length}} | {{.Size}} |
+{{end}}
+{{else}}
+| None ||||
+{{end}}
 
-Struct Types:
+## Struct Types
+{{if len .StructTypes -}}
 {{range .StructTypes}}
-* Name: {{.Name}}
-{{range .Fields}}
-    Field: {{.Name}} {{.Type}}
-{{end}}
-{{end}}
-{{end}}
-
-{{if len .Interfaces}}
---------------------------------------------------------------------------------
-
-Interfaces:
-{{range .Interfaces}}
-
-* Interface: {{.Name}}
-
-Methods:
-{{range .Methods}}
-Name: {{.Name}}
-Args:
-{{range .Args}}- '{{.Name}}' {{.Type}}
-{{end}}
-{{end}}
+- `{{.Name}}`
+{{- range .Fields}}
+    - {{.Name}} {{.Type}}
+{{- end}}
 {{end}}
 {{end}}
 
-{{if len .Constants}}
---------------------------------------------------------------------------------
-
-Constants:
-
-{{range .Constants}}
-* Name: {{.Name}} {{.Type}} {{.Value}}
+## Interfaces
+{{range .Interfaces -}}
+### `{{.Name}}`
+{{range .Methods -}}
+- {{.Name}}
+{{range .Args}}
+    - '{{.Name}}' {{.Type}}
+{{- end}}
+{{- end}}
 {{end}}
+
+## Constants:
+
+| Name | Type | Value |
+| :--- | :--- | :--- |
+{{range .Constants -}}
+| {{.Name}} | {{.Type}} | {{.Value}} |
 {{end}}

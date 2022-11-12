@@ -80,7 +80,7 @@ struct {{.Name}} {
 // Arrays
 
 {{- range .ArrayTypes}}
-using {{.Name}} = {{if eq .Length 0}}std::vector<{{cpptype .ElemType}}>{{else}}std::array<{{cpptype .ElemType}}, {{.Length}}>{{end}};
+using {{.Name}} = {{if .IsVariableLength}}std::vector<{{cpptype .ElemType}}>{{else}}std::array<{{cpptype .ElemType}}, {{.Length}}>{{end}};
 {{- end}}
 {{- end}}
 

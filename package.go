@@ -20,18 +20,6 @@ type Package struct {
 	importIndex map[string]struct{} // aka set[string]
 }
 
-func sizeofType(t types.Type) int {
-	return int(sizer.Sizeof(t))
-}
-
-func alignof(t types.Type) int {
-	if t == nil {
-		return 0
-	}
-	// return int(sizes.Alignof(t))
-	return 0
-}
-
 // NewPackage creates a new Package that has the given name.  The
 // Package is created with a nil, as opposed to empty, Decls and
 // Imports slices.
@@ -74,8 +62,9 @@ func (p *Package) Import(path string) {
 // Const adds a declaration of a constant to the receiver.
 func (p *Package) Const(obj *types.Const) {
 	typ := cleanTypename(obj.Type())
-	val := obj.Val().String() // ExactString()
-	d := NewConstDecl(obj.Name(), typ, val)
+	val := obj.Val().String()
+	exact := obj.Val().ExactString()
+	d := NewConstDecl(obj.Name(), typ, val, exact)
 	p.Declare(d)
 }
 

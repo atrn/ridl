@@ -1,5 +1,7 @@
 Directory:      {{.Directory}}
-Package:        {{.PackageName}}
-Run:            {{.BuildTime}}
+PackageName:    {{.PackageName}}
+Filenames:      {{.Filenames}}
+BuildTime:      {{.BuildTime}}
 User:           {{.Username}}
 Host:           {{.Hostname}}
+RidlVersion:    {{.RidlVersion}}
