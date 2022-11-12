@@ -11,20 +11,17 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"text/template"
 )
 
 // FindTemplate searches for a template file with the given name
 // and returns its full path.
-//
-func FindTemplate(filename string) string {
-	if *debugFlag {
-		log.Printf("looking for template %q", filename)
-	}
+func FindTemplate(name string) string {
+	logdebug("looking for template %q", name)
 	fileexists := func(path string) (string, bool) {
 		try := func(path string) (string, bool) {
 			if info, err := os.Stat(path); err == nil {
@@ -38,40 +35,32 @@ func FindTemplate(filename string) string {
 		}
 		return p, ok
 	}
-	if path, exists := fileexists(filename); exists {
+	if path, exists := fileexists(name); exists {
+		logdebug("template %q found - %q", name, path)
 		return path
 	}
-	if dir := os.Getenv("RIDLDIR"); dir != "" {
-		name := filepath.Join(dir, filename)
-		if path, exists := fileexists(name); exists {
+	for _, directory := range templateDirs.Slice() {
+		filename := filepath.Join(directory, name)
+		if path, exists := fileexists(filename); exists {
+			logdebug("template %q found - %q", name, path)
+			return path
+		}
+		filename += ".template"
+		if path, exists := fileexists(filename); exists {
+			logdebug("template %q found - %q", name, path)
 			return path
 		}
 	}
-	if *templatesDir != "" {
-		name := filepath.Join(*templatesDir, filename)
-		if path, exists := fileexists(name); exists {
-			return path
-		}
-		name += ".template"
-		if path, exists := fileexists(name); exists {
-			return path
-		}
-	}
+	logdebug("template %q not found", name)
 	return ""
 }
 
 // ExpandTemplate executes the template in the given file, using
 // the supplied context and writing output to the given io.Writer.
-//
-func ExpandTemplate(filename string, context *Context, w io.Writer) error {
-	if tfilename := FindTemplate(filename); tfilename != "" {
-		filename = tfilename
-	} else {
-		return fmt.Errorf("ExpandTemplate %q: %w", filename, os.ErrNotExist)
-	}
-	t := template.New(filepath.Base(filename)).Funcs(cppTemplateFuncs)
-	if t, err := ParseTemplates(t, filename); err != nil {
-		return err
+func ExpandTemplate(filename string, name string, context *Context, w io.Writer) error {
+	t := template.New(name).Funcs(cppTemplateFuncs)
+	if t, err := ParseTemplate(t, filename); err != nil {
+		return fmt.Errorf("ExpandTemplate %q: %w", filename, err)
 	} else if err = t.Execute(w, context); err != nil {
 		return err
 	} else {
@@ -79,73 +68,75 @@ func ExpandTemplate(filename string, context *Context, w io.Writer) error {
 	}
 }
 
-// ParseTemplates parses the template file and adds it to
-// the given template. Special comment lines in the file
-// are skipped.
-//
-func ParseTemplates(t *template.Template, filename string) (*template.Template, error) {
+var ridlCommentPattern = regexp.MustCompile("^//\\s*ridl:\\s*(.*)\\s*$")
+
+// ParseTemplate parses the template file and adds it to the given
+// template. Special comment lines in the file are skipped.
+func ParseTemplate(t *template.Template, filename string) (*template.Template, error) {
+	logdebug("parse template %q", filename)
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("ParseTemplate %q: %w", filename, err)
 	}
 	defer file.Close()
 	in := bufio.NewScanner(file)
-	skip := func() bool {
-		return in.Scan() && strings.HasPrefix(in.Text(), "//")
-	}
-	if skip() {
-		for skip() {
-		}
-		data := []byte(in.Text())
-		for in.Scan() {
-			data = append(data, []byte(in.Text())...)
+	var data []byte
+	for in.Scan() {
+		line := in.Text()
+		if !ridlCommentPattern.MatchString(line) {
+			data = append(data, []byte(line)...)
 			data = append(data, '\n')
 		}
-		// log.Print(string(data))
-		return t.Parse(string(data))
 	}
-	return t.ParseFiles(filename)
+	return t.Parse(string(data))
 }
 
 // GetEmbeddedOutputFilename looks for a special comment that defines
-// a (ridl) template's suggested output filename.
-//
-func GetEmbeddedOutputFilename(context *Context, filename string) (string, error) {
-	comments, err := ParseComments(filename)
+// a ridl template's output filename spec.
+func GetEmbeddedOutputFilename(templateFilename string) (string, error) {
+	comments, err := ParseComments(templateFilename)
 	if err != nil {
 		return "", err
 	}
-	hadOutputSpec := false
-	fname := ""
+	outputSpec := ""
 	for _, comment := range comments {
 		fields := strings.Fields(comment)
 		switch fields[0] {
 		case "output":
-			if hadOutputSpec {
-				return fname, fmt.Errorf("%q: file contains multiple output specifications", filename)
+			if outputSpec != "" {
+				return outputSpec, fmt.Errorf("%q: template file contains multiple output specifications", templateFilename)
 			}
-			hadOutputSpec = true
-			text := strings.TrimSpace(comment[len(fields[0]):])
-			fname = strings.Replace(text, "{{.Filename}}", strings.TrimSuffix(context.Filename, filepath.Ext(context.Filename)), -1)
+			outputSpec := strings.TrimSpace(comment[len(fields[0]):])
+			logdebug("template %q defines output spec %q", templateFilename, outputSpec)
 		}
 	}
-	return fname, nil
+	return outputSpec, nil
 }
 
-// ParseComments return all of the special ridl comments in a file.
+// ParseComments return the text of all of the special ridl comments in a file.
+//
+// Ridl's "special comments" are single line comments starting at the
+// beginning of a line and who's first, whitespace-separated, field is
+// "ridl:". The "ridl:" prefix is followed by the comment's "text",
+// one or more whitespace-separated "words".
+//
+// This function returns a slice of strings containing all of the
+// comment texts defined by the special "// ridl:" comments.
+//
 //
 func ParseComments(filename string) ([]string, error) {
+	logdebug("ParseComments %q", filename)
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("ParseComments %q: %w", filename, err)
 	}
 	defer file.Close()
-	var lines []string
+	var texts []string
 	for r := bufio.NewScanner(file); r.Scan(); {
-		const prefix = "// ridl:"
-		if strings.HasPrefix(r.Text(), prefix) {
-			lines = append(lines, strings.TrimSpace(r.Text()[len(prefix):]))
+		parts := ridlCommentPattern.FindStringSubmatch(r.Text())
+		if parts != nil && parts[1] != "" {
+			texts = append(texts, parts[1])
 		}
 	}
-	return lines, nil
+	return texts, nil
 }

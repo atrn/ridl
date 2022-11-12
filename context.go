@@ -9,8 +9,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/user"
 	"time"
 )
 
@@ -24,8 +22,12 @@ import (
 type Context struct {
 	// Pointer to our Package
 	*Package
-	// The name of the file being processed.
-	Filename string
+	// Ridl's version "number"
+	RidlVersion string
+	// The directory being processed
+	Directory string
+	// The names of the .ridl files used
+	Filenames []string
 	// The time at which processing is occurring.
 	BuildTime time.Time
 	// The name of the user doing the processing.
@@ -53,21 +55,15 @@ type Context struct {
 }
 
 // NewContext returns a new Context for the given file and Package.
-func NewContext(filename string, pkg *Package) *Context {
-	username := "unknown"
-	hostname := "localhost"
-	if u, err := user.Current(); err == nil {
-		username = u.Username
-	}
-	if name, err := os.Hostname(); err == nil {
-		hostname = name
-	}
+func NewContext(directory string, filenames []string, pkg *Package) *Context {
 	context := &Context{
+		RidlVersion: versionNumber,
 		Package:     pkg,
-		Filename:    filename,
+		Directory:   directory,
+		Filenames:   filenames,
 		BuildTime:   time.Now(),
-		Username:    username,
-		Hostname:    hostname,
+		Username:    MustGetUsername(),
+		Hostname:    MustGetHostname(),
 		Decls:       pkg.Decls,
 		Typedefs:    make([]*TypedefDecl, 0),
 		ArrayTypes:  make([]*ArrayDecl, 0),

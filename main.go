@@ -15,11 +15,16 @@ import (
 	"path/filepath"
 )
 
+const (
+	StdoutFilename = "-"
+)
+
 var (
 	templateNames  = NewStringSlice()
-	outputFilename = flag.String("o", "", "write output to `filename` ('-' means stdout)")
-	templatesDir   = flag.String("D", "", "search for templates in `dir`")
+	templateDirs   = NewStringSlice()
+	outputFilename = flag.String("o", "", "write output to `filename` (use '-' for stdout)")
 	debugFlag      = flag.Bool("debug", false, "enable debug output")
+	dryRunFlag     = flag.Bool("n", false, "do not generate output, only parse files")
 )
 
 func main() {
@@ -35,6 +40,11 @@ func main() {
 
 	versionFlag := flag.Bool("version", false, "output version and exit")
 	flag.Var(templateNames, "t", "generate output using `template`")
+	flag.Var(templateDirs, "T", "search for templates in `dir`")
+
+	if s := os.Getenv("RIDLPATH"); s != "" {
+		*templateDirs = filepath.SplitList(s)
+	}
 
 	flag.Parse()
 
@@ -48,34 +58,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *templatesDir == "" {
-		if *templatesDir = os.Getenv("RIDL_TEMPLATES_DIR"); *templatesDir == "" {
-			*templatesDir = filepath.Clean(filepath.Join(filepath.Dir(os.Args[0]), "../lib/ridl"))
-		}
-	}
-
-	if templateNames.Len() > 0 && !isDir(*templatesDir) {
-		log.Fatalf("%s: Not found or not a directory", *templatesDir)
-	}
-
 	for _, path := range flag.Args() {
 		var err error
 		if isDir(path) {
-			err = ridlDir(path, makeOutputSpec(path), templateNames.Slice())
+			err = ridlDir(path, templateNames.Slice())
 		} else {
-			err = ridlFile(path, makeOutputSpec(filepath.Dir(path)), templateNames.Slice())
+			err = ridlFile(path, templateNames.Slice())
 		}
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-}
-
-func makeOutputSpec(dir string) string {
-	if *outputFilename == "-" {
-		return "-"
-	}
-	return filepath.Join(dir, *outputFilename)
 }
 
 func isDir(path string) bool {

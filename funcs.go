@@ -9,16 +9,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"strings"
 )
 
 func cpptype(fullType string, asArg bool) string {
 	result := func(t string) string {
-		if *debugFlag {
-			log.Printf("DEBUG: cpptype %q -> %q", fullType, t)
-		}
+		logdebug("cpptype %q -> %q", fullType, t)
 		return t
 	}
 	constref := func(t string) string {

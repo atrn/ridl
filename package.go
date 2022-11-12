@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"go/types"
-	"log"
 	"sort"
 	"strings"
 )
@@ -52,10 +51,6 @@ func NewPackage(pkg *types.Package) *Package {
 			p.Const(actual)
 		case *types.TypeName:
 			p.TypeName(actual)
-		default:
-			if *debugFlag {
-				log.Printf("X1:  %T  ->  %#v\n", actual, actual)
-			}
 		}
 	}
 
@@ -86,9 +81,6 @@ func (p *Package) Const(obj *types.Const) {
 
 // TypeName adds a type declaration to the receiver.
 func (p *Package) TypeName(obj *types.TypeName) {
-	if *debugFlag {
-		log.Printf("%s: %d", obj.Type().String(), sizer.Sizeof(obj.Type()))
-	}
 	switch t := obj.Type().Underlying().(type) {
 	case *types.Array:
 		p.Array(obj.Name(), t)
@@ -102,8 +94,6 @@ func (p *Package) TypeName(obj *types.TypeName) {
 		p.Slice(obj.Name(), t)
 	case *types.Map:
 		p.Map(obj.Name(), t)
-	default:
-		log.Printf("X2 %T %#v\n", t, t)
 	}
 }
 

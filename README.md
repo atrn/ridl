@@ -27,8 +27,17 @@ messages.
 
 ## What ridl doesn't do
 
-Being based on Go means ridl has no unions and offers no direct
-support for interface versioning.
+Using Go as the definition language means ridl is restricted to what
+Go's type specifications.  That means there are no unions (also called
+_variant records_, _sum types_ and _enums_ in some languages), no
+direct support for interface versioning and no support for the
+directory expression of enumerated values.
+
+Unions and versioning are left to end-users but ridl does recognize
+the Go idiom for defining C-style enumerated types and generates
+a data model that allows templates to "undo" the Go-style
+representation.
+
 
 ## Interface Descriptions
 
@@ -101,16 +110,80 @@ Function declarations are by default errors. A _permissive_ mode could
 be used to parse Go files and ignore constructs not permitted in ridl
 files.
 
-## Assumed Communications Semantics
-
-The actual semantics of the messaging are not defined by `ridl` itself
-but depend on the underlying code generator and target environment.
-
 ## Templates
 
 ### Template Context
 
-TBD.
+#### Meta-data
+- PackageName  
+The name of the (Go) ridl package being processed.
+- RidlVersion  
+The version of ridl being used.
+- Directory  
+The name of the directory being processed.
+- Filenames  
+The names of the .ridl files being processed.
+- BuildTime  
+The (system) time when template generation started.
+- Username  
+The name of the user running ridl.
+- Hostname  
+The name of the host on which ridl is being run.
+
+#### Declarations
+
+- Decls  
+All declarations - constants, types and interfaces.
+- Imports  
+The names of any imported packages
+- Typedefs  
+The _basic_ types defined by the ridl files.
+- ArrayTypes  
+The array and slice (variable size arrays).
+- MapTypes  
+The defined map types.
+- StructTypes  
+The defined struct types.
+- Interfaces  
+The interfaces.
+- Constants  
+All constants.
+- Enums  
+Constants that are _enum like_.
+- NotEnums  
+Constants that are not _enum like_.
+
+### Output File Naming
+
+Each template may define an _output spec_ which is used to
+generate the name of the output file created when that template is
+used. An output spec is defined via special comment forms embedded
+in the template, so called _ridl comments_.
+
+Ridl comments are `//` style _line comments_ that:
+
+1. begin at the start of the line (i.e. the first column)
+2. have a first, space-separated, token of "ridl:"
+
+The ridl `output` comment is used to define the so-called _output specification_.
+A `text/template` template used to generate the name of the output
+file created by a template.
+
+The specification is evaluated with a _context_ defining a number of
+variables:
+
+- Template  
+The name of the template being processed.
+- Package  
+The name of the package being processed.
+- Directory  
+The directory being processed.
+- Time  
+Time of processing.
+- Username  
+Name of the user running ridl.
+- Hostname  
+Name of the host on which ridl is being run.
 
 ### Template Functions
 

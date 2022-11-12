@@ -8,6 +8,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"go/ast"
 	"go/importer"
@@ -15,45 +16,46 @@ import (
 	"go/token"
 	"go/types"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
-	"strings"
+	"text/template"
+	"time"
 )
 
-func ridlDir(path string, outputSpec string, templateNames []string) error {
-	if *debugFlag {
-		log.Printf("Parsing .ridl files from directory %q", path)
+func ridlDir(directoryPath string, templateNames []string) error {
+	logdebug("Parsing all .ridl files from directory %q", directoryPath)
+	if filenames, _ := filepath.Glob(filepath.Join(directoryPath, "*.ridl")); filenames == nil {
+		return fmt.Errorf("%s: No .ridl files found in directory", directoryPath)
+	} else {
+		return ridlFiles(directoryPath, filenames, templateNames)
 	}
-	paths, err := filepath.Glob(filepath.Join(path, "*.ridl"))
-	if err != nil {
+}
+
+func ridlFile(filename string, templateNames []string) error {
+	logdebug("Parsing file %q", filename)
+	if absPath, err := filepath.Abs(filename); err != nil {
+		return err
+	} else {
+		return ridlFiles(filepath.Dir(absPath), []string{filename}, templateNames)
+	}
+}
+
+func ridlFiles(directory string, filenames []string, templateNames []string) error {
+	if pkg, err := parseFiles(filenames); err == nil {
+		return generateOutput(pkg, directory, filenames, templateNames)
+	} else {
 		return err
 	}
-	pkg, err := parseFiles(paths)
-	if err == nil {
-		err = generateOutput(pkg, path, templateNames, outputSpec)
-	}
-	return err
 }
 
-func ridlFile(path string, outputSpec string, templateNames []string) error {
-	if *debugFlag {
-		log.Printf("Parsing .ridl file %q", path)
-	}
-	pkg, err := parseFiles([]string{path})
-	if err == nil {
-		err = generateOutput(pkg, path, templateNames, outputSpec)
-	}
-	return err
-}
-
-func parseFiles(paths []string) (*Package, error) {
+func parseFiles(filenames []string) (*Package, error) {
 	fset := token.NewFileSet()
-	files := make([]*ast.File, 0, len(paths))
-	for _, path := range paths {
-		file, err := parser.ParseFile(fset, path, nil, 0)
+	files := make([]*ast.File, 0, len(filenames))
+	for _, filename := range filenames {
+		logdebug("parsing %q", filename)
+		file, err := parser.ParseFile(fset, filename, nil, 0)
 		if err != nil {
-			return nil, fmt.Errorf("parse %q: %w", path, err)
+			return nil, fmt.Errorf("parse %q: %w", filename, err)
 		}
 		files = append(files, file)
 	}
@@ -64,47 +66,75 @@ func parseFiles(paths []string) (*Package, error) {
 	}
 	pkg, err := conf.Check("", fset, files, nil)
 	if err != nil {
-		return nil, fmt.Errorf("type check %v: %w", paths, err)
+		return nil, fmt.Errorf("type check %q: %w", filenames, err)
 	}
-
-	if *debugFlag {
-		log.Printf("parsed files %q ok", paths)
-	}
-
 	return NewPackage(pkg), nil
 }
 
-func generateOutput(pkg *Package, path string, templateNames []string, outputFilename string) error {
-	if *debugFlag {
-		log.Printf("generating output with templates %q, output spec %q", templateNames, outputFilename)
-	}
-	templateContext := NewContext(path, pkg)
+func generateOutput(pkg *Package, directory string, filenames []string, templateNames []string) error {
+	templateContext := NewContext(directory, filenames, pkg)
 	for _, templateName := range templateNames {
-		w, err := getOutput(path, templateName, outputFilename)
-		if err != nil {
-			return fmt.Errorf("failed to determine output path for template %q: %w", templateName, err)
+		templateFilename := FindTemplate(templateName)
+		if templateFilename == "" {
+			return fmt.Errorf("%q: template file not found", templateName)
 		}
-		err = ExpandTemplate(templateName, templateContext, w)
-		err2 := w.Close()
-		if err == nil {
-			err = err2
-		}
+		outputFilename, err := makeOutputFilename(templateFilename, templateName, directory, pkg.PackageName)
 		if err != nil {
 			return err
+		}
+		var w io.WriteCloser
+		if *dryRunFlag {
+			w = NopWriteCloser(io.Discard)
+		} else if outputFilename == StdoutFilename {
+			w = NopWriteCloser(os.Stdout)
+		} else if outputFilename == "" {
+			w = NopWriteCloser(io.Discard)
+		} else if w, err = os.Create(outputFilename); err != nil {
+			return fmt.Errorf("%q: %w", outputFilename, err)
+		}
+		err1 := ExpandTemplate(templateFilename, templateName, templateContext, w)
+		err2 := w.Close()
+		if err1 == nil {
+			err1 = err2
+		}
+		if err1 != nil {
+			return err1
 		}
 	}
 	return nil
 }
 
-func getOutput(path, templateName, outputFilename string) (io.WriteCloser, error) {
-	if outputFilename == "-" {
-		return NopWriteCloser(os.Stdout), nil
+func makeOutputFilename(templateFilename, templateName, directory, pkgname string) (string, error) {
+	if *outputFilename != "" {
+		return *outputFilename, nil
 	}
-	if outputFilename == "" {
-		sansExt := func(s string) string {
-			return strings.TrimSuffix(s, filepath.Ext(s))
-		}
-		outputFilename = sansExt(path) + "." + sansExt(filepath.Base(templateName))
+	spec, err := GetEmbeddedOutputFilename(templateFilename)
+	if err != nil {
+		return "", err
 	}
-	return os.Create(outputFilename)
+	t, err := template.New("output").Parse(spec)
+	if err != nil {
+		return "", err
+	}
+	type Context struct {
+		Template  string
+		Package   string
+		Directory string
+		Time      time.Time
+		Username  string
+		Hostname  string
+	}
+	context := Context{
+		Template:  templateName,
+		Package:   pkgname,
+		Directory: directory,
+		Time:      time.Now(),
+		Username:  MustGetUsername(),
+		Hostname:  MustGetHostname(),
+	}
+	var buffer bytes.Buffer
+	if err = t.Execute(&buffer, context); err != nil {
+		return "", err
+	}
+	return buffer.String(), nil
 }
