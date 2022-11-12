@@ -4,7 +4,7 @@
 
 // -*- mode:c++ -*-
 
-// Generated from {{.Filename}} {{.BuildTime}}
+// Generated from {{.Directory}} {{.BuildTime}}
 
 #include <zmq.h>
 

@@ -1,8 +1,8 @@
 // -*- mode:go-template -*-
 
-// Generated from {{.Filename}} {{.BuildTime}}
+// Generated from {{.Directory}} {{.BuildTime}}
 
-#include "{{basename .Filename}}.hpp"
+#include "{{.PackageName}}.hpp"
 
 namespace {{.PackageName}}
 {

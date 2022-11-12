@@ -1,6 +1,6 @@
 // -*- mode:go-template -*-
 
-Input:          {{.Filename}}
+Directory:      {{.Directory}}
 Package:        {{.PackageName}}
 Run:            {{.BuildTime}}
 User:           {{.Username}}

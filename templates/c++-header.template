@@ -2,7 +2,7 @@
 
 // -*- mode:c++ -*-
 
-// Generated from {{.Filename}} {{.BuildTime}}
+// Generated from {{.Directory}} {{.BuildTime}}
 
 #include <array>
 #include <cstdint>
