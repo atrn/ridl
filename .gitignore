@@ -1,9 +1,5 @@
-/README.html
 /ridl
-/tests/*.[ch]pp
-.dcc.o/
-*.a
-/tests/a-system/a-system
-/tests/a-system/a_system.h
-/tests/a-system/a_system_messages.h
 /ridl.exe
+/tests/**/*.[ch]pp
+/tests/**/*.a
+/.vscode
