@@ -1,0 +1,7 @@
+# This file is used by dcc (github.com/atrn/dcc)
+
+-std=c++14
+-pedantic
+-Wall -Wextra
+-g
+-O2

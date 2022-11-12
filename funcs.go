@@ -38,6 +38,20 @@ func cpptype(fullType string, asArg bool) string {
 			// slice -> pointer to T
 			arraySuffix = " *"
 		}
+	} else if strings.HasPrefix(fullType, "map[") {
+		// FIXME: this is simplistic and fails for things like map[[2]int]some_type
+		end := strings.Index(fullType, "]")
+		if end == -1 {
+			panic("malformed type: " + fullType)
+		}
+		gokey := fullType[4:end]
+		goval := fullType[end+1:]
+		ckey := cpptype(gokey, false)
+		if goval == "struct{}" {
+			return result(fmt.Sprintf("std::set<%s>", ckey))
+		}
+		cval := cpptype(goval, false)
+		return result(fmt.Sprintf("std::map<%s, %s>", ckey, cval))
 	}
 	switch goType {
 	case "byte":
@@ -74,11 +88,15 @@ func cpptype(fullType string, asArg bool) string {
 }
 
 func cppType(t string) string {
-	return cpptype(t, false)
+	c := cpptype(t, false)
+	logdebug("cpptype %q -> %q", t, c)
+	return c
 }
 
 func argType(t string) string {
-	return cpptype(t, true)
+	c := cpptype(t, true)
+	logdebug("argtype %q -> %q", t, c)
+	return c
 }
 
 func resType(t string) string {
@@ -87,13 +105,15 @@ func resType(t string) string {
 		c = strings.TrimSuffix(c, " *")
 		c = fmt.Sprintf("std::vector<%s>", c)
 	}
+	logdebug("restype %q -> %q", t, c)
 	return c
 }
 
 func basename(path string) string {
-	path = filepath.Base(path)
-	path = strings.TrimSuffix(path, filepath.Ext(path))
-	return path
+	base := filepath.Base(path)
+	base = strings.TrimSuffix(base, filepath.Ext(base))
+	logdebug("basename %q -> %q", path, base)
+	return base
 }
 
 func tolower(s string) string {
@@ -112,7 +132,9 @@ func eltype(t string) string {
 	if end == -1 {
 		panic("malformed type: " + t)
 	}
-	return t[end+1:]
+	et := t[end+1:]
+	logdebug("eltype %q -> %q", t, et)
+	return et
 }
 
 func dims(t string) string {
@@ -123,7 +145,9 @@ func dims(t string) string {
 	if end == -1 {
 		panic("malformed type: " + t)
 	}
-	return t[0 : end+1]
+	d := t[0 : end+1]
+	logdebug("dims %q -> %q", t, d)
+	return d
 }
 
 func isslice(t string) bool {

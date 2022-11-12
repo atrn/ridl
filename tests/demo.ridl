@@ -1,0 +1,102 @@
+// -*- mode:go -*-
+
+// This is a sample/demonstration .ridl file that demonstrates various
+// aspects of ridl and its interpretation of Go type and constant
+// declarations.
+
+// Like go ridl interfaces must declare their 'package'.
+//
+// This is really because ridl simply uses Go's go/types parser to
+// parse files and it requires those files be valid Go.
+
+package demo
+
+// Simple constants with inferred types (Go's "untyped" constants)
+//
+const (
+	Release   = 1
+	Version   = 1234.567
+	Copyright = "Copyright (C) Example Corp"
+)
+
+// Type aliases
+type Coord float32
+
+// Fixed-size arrays (at most N elements)
+type Vec [3]Coord
+
+// Variable-length arrays (zero or more elements)
+type Samples []float32
+
+// Structures
+type Point struct {
+	x, y Coord
+}
+
+// Variable length arrays of structures
+type Path []Point
+
+// The empty struct.
+type Empty struct {
+}
+
+// Enums defined using the idiomatic Go method.
+//
+// Ridl detects these and makes them available to users (via the
+// template context structure) sepaately to other constants.
+//
+type TypeCode int8
+
+const (
+	NullType TypeCode = iota
+	ShapeType
+	TextType
+	VideoType
+)
+
+// Larger structure with all types.
+//
+type Header struct {
+	Code       TypeCode // based upon int8
+	Flags      uint8
+	Delta      int16
+	Len        uint16
+	Version    int32
+	ElSize     uint32
+	Balance    int64
+	Timestamp  uint64
+	Factor1    float32
+	Factor2    float64
+	SomeFlag   bool
+	Message    string
+	Error      error
+	Array      [3]int
+	Vector     []float32
+	Dictionary map[string]string
+	Set        map[string]struct{}
+}
+
+// Go's interface type is parsed and, depending upon the template,
+// abused to define messaging-based interfaces.
+//
+// Methods with no result can be interpretered as a "one way" message.
+// The method's name providing a message identifier and the arguments
+// being the message's payload.
+//
+// Methods with results can be thought of as defining a
+// request/response, or RPC.  THe name and arguments being treated as
+// above and the results defining the payload of a result message.
+//
+// All of this interpretation is done via whatever template is being
+// used. Ridl itself doesn't require such an interpretation.
+//
+type API interface {
+	NoArgsNoResult()
+	NoArgsOneResult() int
+	NoArgsStructResult() Header
+	Args(length int, description string)
+	ArgsAndOneResult(Header, [4]float64) error
+	ArgsAndTwoResults(Header, [4]float64, [1024]float32) (string, error)
+	ArgsAndTwoNamedResults(Header, [4]float64) (name string, err error)
+	ArraysAndFloats([]float32, float32, float64) []float64
+}

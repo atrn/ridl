@@ -25,22 +25,18 @@ using {{.Name}} = {{cpptype .Alias}};
 {{- end}}
 {{- end}}
 
-{{- if .Constants}}
+{{- if .NotEnums}}
 
 // Constants
 
-{{range .Constants}}
+{{range .NotEnums}}
 const {{cpptype .Type}} {{.Name}} = {{.Value}};
 {{- end}}
 {{- end}}
 
-{{- if .ArrayTypes}}
-
-// Arrays
-
-{{- range .ArrayTypes}}
-using {{.Name}} = {{if eq .Size 0}}std::vector<{{cpptype .ElemType}}>{{else}}std::array<{{cpptype .ElemType}}, {{.Size}}>{{end}};
-{{- end}}
+{{- if .Enums}}
+{{range .Enums}}
+{{end}}
 {{- end}}
 
 {{- if .MapTypes}}
@@ -67,6 +63,16 @@ struct {{.Name}} {
 {{- end}}
 };
 {{end}}
+{{- end}}
+
+
+{{- if .ArrayTypes}}
+
+// Arrays
+
+{{- range .ArrayTypes}}
+using {{.Name}} = {{if eq .Size 0}}std::vector<{{cpptype .ElemType}}>{{else}}std::array<{{cpptype .ElemType}}, {{.Size}}>{{end}};
+{{- end}}
 {{- end}}
 
 {{- if .Interfaces}}
