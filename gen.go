@@ -41,11 +41,13 @@ func FindTemplate(name string) string {
 	}
 	for _, directory := range templateDirs.Slice() {
 		filename := filepath.Join(directory, name)
+		logdebug("considering %q", filename)
 		if path, exists := fileexists(filename); exists {
 			logdebug("template %q found - %q", name, path)
 			return path
 		}
 		filename += ".template"
+		logdebug("considering %q", filename)
 		if path, exists := fileexists(filename); exists {
 			logdebug("template %q found - %q", name, path)
 			return path

@@ -25,19 +25,18 @@ different transports, with Go interface types defining sets of
 messages.
 
 
-## What ridl doesn't do
+## What ridl doesn't
 
 Using Go as the definition language means ridl is restricted to what
-Go's type specifications.  That means there are no unions (also called
-_variant records_, _sum types_ and _enums_ in some languages), no
-direct support for interface versioning and no support for the
-directory expression of enumerated values.
+Go's type specifications can express.  That means there are no unions,
+also called _variant records_, _sum types_ or _enums_ in some
+languages. There is no direct support for interface versioning and no
+support for the direct expression of enumerated values a la C/C++.
 
-Unions and versioning are left to end-users but ridl does recognize
-the Go idiom for defining C-style enumerated types and generates
-a data model that allows templates to "undo" the Go-style
-representation.
-
+Unions and versioning are left to end-users however ridl does
+recognize the idiomatic Go way of defining C-style enumerated types
+and generates a data model that allows templates to "undo" the
+Go-style representation.
 
 ## Interface Descriptions
 

@@ -9,6 +9,20 @@ package main
 
 import "fmt"
 
+type DeclKind int
+
+const (
+	DeclKindConst = iota
+	DeclKindTypedef
+	DeclKindArray
+	DeclKindStruct
+	DeclKindStructField
+	DeclKindMap
+	DeclKindInterface
+	DeclKindMethod
+	DeclKindMethodArg
+)
+
 //  ================================================================
 
 // The Decl interface is used to retrieve information common
@@ -22,6 +36,9 @@ type Decl interface {
 	// The Type method returns the receiver's Go type as a string.
 	//
 	Type() string
+
+	// The kind of declaration.
+	Kind() DeclKind
 }
 
 type SizedDecl interface {
@@ -35,6 +52,7 @@ type SizedDecl interface {
 // decl type is embedded in declaration types.
 type decl struct {
 	name string
+	kind DeclKind
 }
 
 // Name returns the receiver's name, a Go identifier.
@@ -42,8 +60,52 @@ func (d *decl) Name() string {
 	return d.name
 }
 
+// Kind returns the kind of declaration.
+func (d *decl) Kind() DeclKind {
+	return d.kind
+}
+
+func (d *decl) IsConst() bool {
+	return d.kind == DeclKindConst
+}
+
+func (d *decl) IsTypedef() bool {
+	return d.kind == DeclKindTypedef
+}
+
+func (d *decl) IsArray() bool {
+	return d.kind == DeclKindArray
+}
+
+func (d *decl) IsStruct() bool {
+	return d.kind == DeclKindStruct
+}
+
+func (d *decl) IsStructField() bool {
+	return d.kind == DeclKindStructField
+}
+
+func (d *decl) IsMap() bool {
+	return d.kind == DeclKindMap
+}
+
+func (d *decl) IsInterface() bool {
+	return d.kind == DeclKindInterface
+}
+
+func (d *decl) IsMethod() bool {
+	return d.kind == DeclKindMethod
+}
+
+func (d *decl) IsMethodArg() bool {
+	return d.kind == DeclKindMethodArg
+}
+
+//  ================================================================
+
 // The sizedDecl struct is a decl that has a size, in bytes.
-// It implements the SizedDecl interface.
+// It implements the SizedDecl interface and is embedded in
+// declaration types that have a size.
 type sizedDecl struct {
 	decl
 	size int64
@@ -69,7 +131,7 @@ type ConstDecl struct {
 
 // NewConstDecl returns a new ConstDecl with the given name, type and value.
 func NewConstDecl(name, typ, value, exact string) *ConstDecl {
-	return &ConstDecl{decl{name}, typ, value, exact}
+	return &ConstDecl{decl{name, DeclKindConst}, typ, value, exact}
 }
 
 // Type returns the receiver's type.
@@ -94,7 +156,7 @@ type TypedefDecl struct {
 // NewTypedefDecl returns a new TypdefDecl with the given
 // name and aliased type.
 func NewTypedefDecl(name, alias string) *TypedefDecl {
-	return &TypedefDecl{decl{name}, alias, false}
+	return &TypedefDecl{decl{name, DeclKindTypedef}, alias, false}
 }
 
 // Type returns the receiver's type, the alias part of
@@ -117,7 +179,7 @@ type ArrayDecl struct {
 // element type and size. A size of 0 implies an unbounded
 // array, or vector, type.
 func NewArrayDecl(name, typ string, length int, size int64) *ArrayDecl {
-	return &ArrayDecl{sizedDecl{decl{name}, size}, typ, length}
+	return &ArrayDecl{sizedDecl{decl{name, DeclKindArray}, size}, typ, length}
 }
 
 // Length returns the number of elements in the receiver.
@@ -159,7 +221,7 @@ type StructDecl struct {
 // NewStructDecl returns a new, empty, StructDecl with the
 // given name.
 func NewStructDecl(name string, size int64) *StructDecl {
-	return &StructDecl{sizedDecl{decl{name}, size}, nil}
+	return &StructDecl{sizedDecl{decl{name, DeclKindStruct}, size}, nil}
 }
 
 // AddField appends a field to the receiver's collection of fields.
@@ -188,7 +250,7 @@ type StructField struct {
 // NewStructField returns a new StructField with the given name and
 // type.
 func NewStructField(name, typ string, size, offset, alignment int64) *StructField {
-	return &StructField{sizedDecl{decl{name}, size}, typ, nil, offset, alignment}
+	return &StructField{sizedDecl{decl{name, DeclKindStructField}, size}, typ, nil, offset, alignment}
 }
 
 // Type returns the receiver's type.
@@ -225,7 +287,7 @@ type MapDecl struct {
 // NewMapDecl returns a new MapDecl with the given name,
 // and key and value types.
 func NewMapDecl(name, keytyp, valtyp string) *MapDecl {
-	return &MapDecl{decl{name}, keytyp, valtyp}
+	return &MapDecl{decl{name, DeclKindMap}, keytyp, valtyp}
 }
 
 // KeyType returns the type, as a string, of the receiver's keys.
@@ -251,7 +313,7 @@ type InterfaceDecl struct {
 // NewInterfaceDecl returns a new, empty, InterfaceDecl with the
 // given name.
 func NewInterfaceDecl(name string) *InterfaceDecl {
-	return &InterfaceDecl{decl{name}, nil, nil}
+	return &InterfaceDecl{decl{name, DeclKindInterface}, nil, nil}
 }
 
 // Type returns the receiver's type.
@@ -283,7 +345,7 @@ type MethodDecl struct {
 // NewMethod returns a new Method with the given name, arguments
 // and results.
 func NewMethod(name string, args []*MethodArg, results []*MethodArg) *MethodDecl {
-	return &MethodDecl{decl{name}, args, results}
+	return &MethodDecl{decl{name, DeclKindMethod}, args, results}
 }
 
 // Type returns the receiver's type.
@@ -302,13 +364,15 @@ type MethodArg struct {
 
 // NewMethodArg retusn a new MethodArg with the given name and type.
 func NewMethodArg(name, typ string) *MethodArg {
-	return &MethodArg{decl{name}, typ}
+	return &MethodArg{decl{name, DeclKindMethodArg}, typ}
 }
 
 // Type returns the receiver's type.
 func (decl *MethodArg) Type() string {
 	return decl.typ
 }
+
+//  ================================================================
 
 // Enum represents a C/C++ enumerated type that has been emulated
 // using the Go idiom of defining a type and a series of constants of
