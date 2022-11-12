@@ -4,17 +4,14 @@ ridl=../ridl
 templates=../templates
 clang_format_args?=--style=Microsoft -i
 
-all:
+all: test
 
 demo.hpp : demo.ridl ../templates/c++-header.template $(ridl)
 	$(ridl) --debug -T $(templates) -t c++-header -o demo.hpp demo.ridl
 	clang-format $(clang_format_args) demo.hpp
 
-demo.cpp : demo.ridl ../templates/c++-source.template $(ridl)
-	$(ridl) --debug -T $(templates) -t c++-source.template -o demo.cpp demo.ridl
-	clang-format $(clang_format_args) demo.cpp
-
-test: demo.hpp demo.cpp
+test: demo.hpp
+	echo '#include "demo.hpp"' > demo.cpp; echo 'int main() {}' >> demo.cpp
 	dmake
 
 clean:

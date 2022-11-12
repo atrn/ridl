@@ -78,15 +78,20 @@ func (decl *ConstDecl) Type() string {
 
 // A TypedefDecl records a type alias formed by a type declaration
 // of the form "type <identifier> <identifier>".
+//
+// If IsEnum is true the type is used as a Go-style enum and
+// appears in the Enums slice.
+//
 type TypedefDecl struct {
 	decl
-	Alias string
+	Alias  string
+	IsEnum bool
 }
 
 // NewTypedefDecl returns a new TypdefDecl with the given
 // name and aliased type.
 func NewTypedefDecl(name, alias string) *TypedefDecl {
-	return &TypedefDecl{decl{name}, alias}
+	return &TypedefDecl{decl{name}, alias, false}
 }
 
 // Type returns the receiver's type, the alias part of
@@ -292,4 +297,12 @@ func NewMethodArg(name, typ string) *MethodArg {
 // Type returns the receiver's type.
 func (decl *MethodArg) Type() string {
 	return decl.typ
+}
+
+// Enum represents a C/C++ enumerated type that has been emulated
+// using the Go idiom of defining a type and a series of constants of
+// that type.
+type Enum struct {
+	Typedef   *TypedefDecl
+	Constants []*ConstDecl
 }

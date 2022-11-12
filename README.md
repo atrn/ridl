@@ -209,3 +209,5 @@ Returns the element type of an array or slice type.
 Returns the C++ type to be used as a function result.
 #### dims
 TBD.
+#### decap
+Converts any leading capital letter in a string to lower case.

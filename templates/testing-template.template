@@ -27,7 +27,7 @@ const {{cpptype .Type}} {{.Name}} = {{.Value}};
 
 // Array Types
 {{range .ArrayTypes}}
-{{if eq .Size 0}}typedef std::vector<{{.Type}}> {{.Name}};{{else}}typedef std::array<{{.Type}}, {{.Size}}> {{.Name}};{{end}}
+{{if eq .Length 0}}typedef std::vector<{{.Type}}> {{.Name}};{{else}}typedef std::array<{{.Type}}, {{.Length}}> {{.Name}};{{end}}
 {{- end}}
 
 // Structs

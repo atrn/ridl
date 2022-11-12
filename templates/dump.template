@@ -42,6 +42,7 @@ Array Types:
 {{range .ArrayTypes}}
 * Name: {{.Name}}
 Type:: {{.Type}}
+Length: {{.Length}}
 Size:: {{.Size}}
 {{end}}
 {{end}}

@@ -74,7 +74,7 @@ func (p *Package) Import(path string) {
 // Const adds a declaration of a constant to the receiver.
 func (p *Package) Const(obj *types.Const) {
 	typ := cleanTypename(obj.Type())
-	val := obj.Val().ExactString()
+	val := obj.Val().String() // ExactString()
 	d := NewConstDecl(obj.Name(), typ, val)
 	p.Declare(d)
 }

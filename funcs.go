@@ -9,8 +9,11 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"path/filepath"
 	"strings"
+	"unicode"
 )
 
 func cpptype(fullType string, asArg bool) string {
@@ -154,6 +157,26 @@ func isslice(t string) bool {
 	return strings.HasPrefix(t, "[]")
 }
 
+func decap(s string) string {
+	if s == "" {
+		return ""
+	}
+
+	r := strings.NewReader(s)
+	ch, _, err := r.ReadRune()
+	if err != nil {
+		log.Printf("WARNING: bad Unicode string detected %q", s)
+		return s
+	}
+
+	if unicode.IsUpper(ch) {
+		bytes, _ := io.ReadAll(r)
+		return string(unicode.ToLower(ch)) + string(bytes)
+	}
+
+	return s
+}
+
 var cppTemplateFuncs = map[string]interface{}{
 	"argtype":  argType,
 	"basename": basename,
@@ -164,4 +187,5 @@ var cppTemplateFuncs = map[string]interface{}{
 	"plus":     plus,
 	"restype":  resType,
 	"tolower":  tolower,
+	"decap":    decap,
 }

@@ -17,6 +17,7 @@ const (
 	Release   = 1
 	Version   = 1234.567
 	Copyright = "Copyright (C) Example Corp"
+	FrameSize = 2048
 )
 
 // Type aliases
@@ -24,6 +25,7 @@ type Coord float32
 
 // Fixed-size arrays (at most N elements)
 type Vec [3]Coord
+type Frame [FrameSize]float32
 
 // Variable-length arrays (zero or more elements)
 type Samples []float32

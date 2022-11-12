@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 {{- range .Imports}}
 #include "{{.}}.hpp"
@@ -21,7 +22,9 @@ namespace {{.PackageName}} {
 // Typedefs
 
 {{range .Typedefs}}
+{{if not .IsEnum}}
 using {{.Name}} = {{cpptype .Alias}};
+{{- end}}
 {{- end}}
 {{- end}}
 
@@ -36,6 +39,12 @@ const {{cpptype .Type}} {{.Name}} = {{.Value}};
 
 {{- if .Enums}}
 {{range .Enums}}
+enum {{.Typedef.Name}} : {{cpptype .Typedef.Alias}}
+{
+{{- range .Constants}}
+    {{.Name}} = {{.Value}},
+{{- end}}
+};
 {{end}}
 {{- end}}
 
@@ -56,9 +65,9 @@ using {{.Name}} = std::map<{{restype .KeyType}}, {{restype .Type}}>;
 struct {{.Name}} {
 {{- range .Fields}}
     {{- if isslice .Type}}
-    {{$t:=eltype .Type}}std::vector<{{$t}}>  _{{.Name}};
+    {{$t:=eltype .Type}}std::vector<{{cpptype $t}}>  _{{decap .Name}};
     {{- else -}}
-    {{$t:=eltype .Type}}{{restype $t}} _{{.Name}} {{dims .Type}};
+    {{$t:=eltype .Type}}{{restype $t}} _{{decap .Name}} {{dims .Type}};
     {{- end}}
 {{- end}}
 };
@@ -71,11 +80,11 @@ struct {{.Name}} {
 // Arrays
 
 {{- range .ArrayTypes}}
-using {{.Name}} = {{if eq .Size 0}}std::vector<{{cpptype .ElemType}}>{{else}}std::array<{{cpptype .ElemType}}, {{.Size}}>{{end}};
+using {{.Name}} = {{if eq .Length 0}}std::vector<{{cpptype .ElemType}}>{{else}}std::array<{{cpptype .ElemType}}, {{.Length}}>{{end}};
 {{- end}}
 {{- end}}
 
-{{- if .Interfaces}}
+{{if .Interfaces}}
 // Interface arguments and results
 {{range .Interfaces -}}
 {{$interface := .Name}}
@@ -100,7 +109,7 @@ struct {{$interface}}_{{.Name}}_Result {
 
 class {{$interface}} {
 public:
-    virtual ~{{.Name}}() {};
+    virtual ~{{.Name}}() = default;
 {{- range .Methods}}
     virtual
 {{- if .Results -}}

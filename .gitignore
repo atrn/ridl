@@ -1,5 +1,7 @@
+/.vscode
 /ridl
 /ridl.exe
 /tests/**/*.[ch]pp
 /tests/**/*.a
-/.vscode
+/tests/tests
+.objs/

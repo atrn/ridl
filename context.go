@@ -124,6 +124,7 @@ func (c *Context) findEnums() {
 		t, found := typedefs[constant.Type()]
 		if found {
 			m[t] = append(m[t], constant)
+			t.IsEnum = true
 		} else {
 			c.NotEnums = append(c.NotEnums, constant)
 		}
