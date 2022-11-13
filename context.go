@@ -126,6 +126,7 @@ func (c *Context) findEnums() {
 		if found {
 			m[t] = append(m[t], constant)
 			t.IsEnum = true
+			constant.IsEnumerator = true
 		} else {
 			c.NotEnums = append(c.NotEnums, constant)
 		}

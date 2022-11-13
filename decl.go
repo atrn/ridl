@@ -124,14 +124,15 @@ func (d *sizedDecl) Size() int64 {
 // - a size
 type ConstDecl struct {
 	decl
-	typ        string
-	Value      string
-	ExactValue string
+	typ          string
+	Value        string
+	ExactValue   string
+	IsEnumerator bool
 }
 
 // NewConstDecl returns a new ConstDecl with the given name, type and value.
 func NewConstDecl(name, typ, value, exact string) *ConstDecl {
-	return &ConstDecl{decl{name, DeclKindConst}, typ, value, exact}
+	return &ConstDecl{decl{name, DeclKindConst}, typ, value, exact, false}
 }
 
 // Type returns the receiver's type.
