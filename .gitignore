@@ -5,3 +5,6 @@
 /tests/**/*.a
 /tests/tests
 .objs/
+/tests/a-system/a_system.h
+/tests/a-system/a_system_messages.h
+/tests/a-system/a-system

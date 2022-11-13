@@ -1,2 +1,2 @@
--L/opt/swlib/zeromq/current/release/lib
+-L${ZEROMQ}/lib
 -lzmq

@@ -1,0 +1,63 @@
+// -*- mode:go-template -*-
+//
+// ridl: output:"%s.h"
+
+// -*- mode:c++ -*-
+
+// Generated from {{.Directory}} {{.BuildTime}}
+
+#include <zmq.h>
+
+#include "{{.PackageName}}.h"
+
+namespace {{.PackageName}}
+{
+
+namespace message
+{
+
+struct header {
+    uint32_t _msg;
+    uint32_t _size;
+};
+
+inline uint32_t make_msgcode(uint16_t pkgid, uint16_t msgid) {
+    return uint32_t(pkgid)<<16|uint32_t(msgid);
+}
+
+inline header make_header(uint16_t pkgid, uint16_t msgid, size_t size) {
+    return header{make_msgcode(pkgid, msgid), uint32_t(size)};
+}
+
+template <typename T>
+inline header make_header(uint16_t pkgid, uint16_t msgid) {
+    return make_header(pkgid, msgid, sizeof (T));
+}
+
+{{$msgid:=0}}
+{{range .Interfaces -}}
+{{$interface := .Name}}
+{{- range .Methods -}}
+const auto {{$interface}}_{{.Name}}_msgcode = make_msgcode(PackageID, {{$msgid}});
+{{$msgid = plus $msgid 1}}
+{{- end}}
+{{- end}}
+
+{{range .Interfaces -}}
+{{$interface := .Name}}
+{{- range .Methods}}
+struct {{$interface}}_{{.Name}}_Args {
+{{- range $index, $arg := .Args}}
+    {{restype $arg.Type}} _{{$arg.Name}};
+{{- end}}
+};
+
+struct {{$interface}}_{{.Name}} {
+    header _header = make_header(PackageID, {{$interface}}_{{.Name}}_msgcode, sizeof ({{$interface}}_{{.Name}}_Args));
+    {{$interface}}_{{.Name}}_Args _payload;
+};
+{{end}}
+{{end}}
+
+} // namespace message
+} // namespace {{.PackageName}}

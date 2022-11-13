@@ -1,0 +1,79 @@
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+#include <vector>
+
+namespace {{.PackageName}}
+{
+
+{{range .Enums -}}
+enum class {{.Typedef.Name}} : {{.Typedef.Alias}}
+{
+{{- range .Constants}}
+    {{.Name}} = {{.Value}},
+{{- end}}
+};
+{{end}}
+
+{{range .Decls -}}
+    {{- if .IsConst -}}
+        {{- if not .IsEnumerator}}
+        const {{cpptype .Type}} {{.Name}} = {{.Value}};
+        {{end}}
+    {{- else if .IsTypedef -}}
+        {{- if not .IsEnum}}
+        using {{.Name}} = {{cpptype .Alias}};
+        {{- end}}
+    {{- else if .IsArray -}}
+        {{if .IsVariableLength}}
+        using {{.Name}} = std::vector<{{cpptype .Type}}>;
+        {{else}}
+        using {{.Name}} = std::array<{{cpptype .ElemType}}, {{.Length}}>;
+        {{end}}
+    {{- else if .IsStruct -}}
+        struct {{.Name}}
+        {
+        {{- range .Fields}}
+            {{cpptype .Type}} _{{decap .Name}};
+        {{- end}}
+        };
+    {{- else if .IsMap -}}
+        map {{.Name}}
+    {{- else if .IsInterface -}}
+        {{$interface := .Name}}
+
+        {{range .Methods}}
+            {{- if .Results -}}
+                {{- $n := len .Results}}
+                {{if gt $n 1}}
+                struct {{$interface}}_{{.Name}}_Result
+                {
+                {{range .Results}}
+                    {{cpptype .Type}} _{{decap .Name}};
+                {{end}}
+                };
+                {{end}}
+            {{end}}
+        {{end}}
+        class {{.Name}}
+        {
+        public:
+            virtual ~{{.Name}}() = default;
+        {{range .Methods}}
+            virtual
+            {{- if .Results -}}
+                {{- $n := len .Results}}
+                {{if eq $n 1}}{{$val := index .Results 0}}{{restype $val.Type}}{{else}}{{$interface}}_{{.Name}}_Result{{end -}}
+            {{else}}
+               void
+            {{- end}}
+            {{.Name}}({{- range $index, $arg := .Args}}{{if eq $index 0}}{{else}}, {{end}}{{argtype $arg.Type}} {{$arg.Name}}{{end}}) = 0;
+        {{- end}}
+        };
+    {{- else -}}
+       something else {{.Name}}
+    {{- end}}
+{{end -}}
+
+} // namespace {{.PackageName}}
