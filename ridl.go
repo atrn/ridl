@@ -68,7 +68,7 @@ func parseFiles(filenames []string) (*Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("type check %q: %w", filenames, err)
 	}
-	return NewPackage(pkg), nil
+	return NewPackage(pkg, fset), nil
 }
 
 func generateOutput(pkg *Package, directory string, filenames []string, templateNames []string) error {
@@ -78,22 +78,16 @@ func generateOutput(pkg *Package, directory string, filenames []string, template
 		if templateFilename == "" {
 			return fmt.Errorf("%q: template file not found", templateName)
 		}
-		outputFilename, err := makeOutputFilename(templateFilename, templateName, directory, pkg.PackageName)
+		outputFilename, err := getOutputFilename(templateFilename, templateName, directory, pkg.PackageName)
 		if err != nil {
 			return err
 		}
-		var w io.WriteCloser
-		if *dryRunFlag {
-			w = NopWriteCloser(io.Discard)
-		} else if outputFilename == StdoutFilename {
-			w = NopWriteCloser(os.Stdout)
-		} else if outputFilename == "" {
-			w = NopWriteCloser(io.Discard)
-		} else if w, err = os.Create(outputFilename); err != nil {
-			return fmt.Errorf("%q: %w", outputFilename, err)
+		output, err := getOutputWriter(outputFilename)
+		if err != nil {
+			return err
 		}
-		err1 := ExpandTemplate(templateFilename, templateName, templateContext, w)
-		err2 := w.Close()
+		err1 := ExpandTemplate(templateFilename, templateName, templateContext, output)
+		err2 := output.Close()
 		if err1 == nil {
 			err1 = err2
 		}
@@ -104,7 +98,24 @@ func generateOutput(pkg *Package, directory string, filenames []string, template
 	return nil
 }
 
-func makeOutputFilename(templateFilename, templateName, directory, pkgname string) (string, error) {
+func getOutputWriter(filename string) (io.WriteCloser, error) {
+	if *dryRunFlag {
+		return NopWriteCloser(io.Discard), nil
+	}
+	if filename == StdoutFilename {
+		return NopWriteCloser(os.Stdout), nil
+	}
+	if filename == "" {
+		return NopWriteCloser(io.Discard), nil
+	}
+	w, err := os.Create(filename)
+	if err != nil {
+		return nil, fmt.Errorf("%q: %w", outputFilename, err)
+	}
+	return w, nil
+}
+
+func getOutputFilename(templateFilename, templateName, directory, pkgname string) (string, error) {
 	if *outputFilename != "" {
 		return *outputFilename, nil
 	}

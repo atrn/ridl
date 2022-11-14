@@ -27,7 +27,7 @@ type Context struct {
 	RidlVersion string
 	// The directory being processed
 	Directory string
-	// The names of the .ridl files used
+	// The names of all .ridl files used when parsing
 	Filenames []string
 	// The time at which processing is occurring.
 	BuildTime time.Time

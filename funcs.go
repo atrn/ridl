@@ -53,9 +53,8 @@ var (
 func cpptype(fullType string, asArg bool) string {
 	result := func(t string, byRef bool) string {
 		if asArg && byRef {
-			t = fmt.Sprintf("const %s &", t)
+			return fmt.Sprintf("const %s &", t)
 		}
-		logdebug("cpptype %q -> %q", fullType, t)
 		return t
 	}
 

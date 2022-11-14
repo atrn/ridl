@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go/token"
 	"go/types"
 	"sort"
 	"strings"
@@ -18,15 +19,17 @@ type Package struct {
 	Decls       []Decl
 	Imports     []string
 	importIndex map[string]struct{} // aka set[string]
+	fset        *token.FileSet
 }
 
 // NewPackage creates a new Package that has the given name.  The
 // Package is created with a nil, as opposed to empty, Decls and
 // Imports slices.
-func NewPackage(pkg *types.Package) *Package {
+func NewPackage(pkg *types.Package, fset *token.FileSet) *Package {
 	p := &Package{
 		PackageName: pkg.Name(),
 		importIndex: make(map[string]struct{}),
+		fset:        fset,
 	}
 
 	for _, imported := range pkg.Imports() {
@@ -64,7 +67,7 @@ func (p *Package) Const(obj *types.Const) {
 	typ := cleanTypename(obj.Type())
 	val := obj.Val().String()
 	exact := obj.Val().ExactString()
-	d := NewConstDecl(obj.Name(), typ, val, exact)
+	d := NewConstDecl(p, obj.Pos(), obj.Name(), typ, val, exact)
 	p.Declare(d)
 }
 
@@ -72,44 +75,44 @@ func (p *Package) Const(obj *types.Const) {
 func (p *Package) TypeName(obj *types.TypeName) {
 	switch t := obj.Type().Underlying().(type) {
 	case *types.Array:
-		p.Array(obj.Name(), t)
+		p.Array(obj.Pos(), obj.Name(), t)
 	case *types.Basic:
-		p.Typedef(obj.Name(), t)
+		p.Typedef(obj.Pos(), obj.Name(), t)
 	case *types.Interface:
-		p.Interface(obj.Name(), t)
+		p.Interface(obj.Pos(), obj.Name(), t)
 	case *types.Struct:
-		p.Struct(obj.Name(), t)
+		p.Struct(obj.Pos(), obj.Name(), t)
 	case *types.Slice:
-		p.Slice(obj.Name(), t)
+		p.Slice(obj.Pos(), obj.Name(), t)
 	case *types.Map:
-		p.Map(obj.Name(), t)
+		p.Map(obj.Pos(), obj.Name(), t)
 	}
 }
 
 // Map adds a map declaration to the reciever.
-func (p *Package) Map(name string, obj *types.Map) {
+func (p *Package) Map(pos token.Pos, name string, obj *types.Map) {
 	keytyp := obj.Key().String()
 	valtyp := obj.Elem().String()
-	p.Declare(NewMapDecl(name, keytyp, valtyp))
+	p.Declare(NewMapDecl(p, pos, name, keytyp, valtyp))
 }
 
 // Slice adds a slice declaration to the receiver.
-func (p *Package) Slice(name string, obj *types.Slice) {
+func (p *Package) Slice(pos token.Pos, name string, obj *types.Slice) {
 	typ := obj.Elem().String()
-	p.Declare(NewArrayDecl(name, typ, 0, sizer.Sizeof(obj.Elem())))
+	p.Declare(NewArrayDecl(p, pos, name, typ, 0, sizer.Sizeof(obj.Elem())))
 }
 
 // Array adds an array declaration to the receiver.
-func (p *Package) Array(name string, obj *types.Array) {
+func (p *Package) Array(pos token.Pos, name string, obj *types.Array) {
 	length := obj.Len()
 	typ := obj.Elem().String()
 	size := sizer.Sizeof(obj)
-	p.Declare(NewArrayDecl(name, typ, int(length), size))
+	p.Declare(NewArrayDecl(p, pos, name, typ, int(length), size))
 }
 
 // Struct adds a struct declaration to the receiver.
-func (p *Package) Struct(name string, obj *types.Struct) {
-	decl := NewStructDecl(name, sizer.Sizeof(obj))
+func (p *Package) Struct(pos token.Pos, name string, obj *types.Struct) {
+	decl := NewStructDecl(p, pos, name, sizer.Sizeof(obj))
 	fields := make([]*types.Var, obj.NumFields())
 	for i := 0; i < obj.NumFields(); i++ {
 		fields[i] = obj.Field(i)
@@ -122,13 +125,13 @@ func (p *Package) Struct(name string, obj *types.Struct) {
 			continue
 		}
 		typ := field.Type()
-		f := NewStructField(field.Name(), typ.String(), sizer.Sizeof(typ), offsets[i], sizer.Alignof(typ))
+		f := NewStructField(p, pos, field.Name(), typ.String(), sizer.Sizeof(typ), offsets[i], sizer.Alignof(typ)) // XXX check pos
 		decl.AddField(f)
 	}
 	p.Declare(decl)
 }
 
-func makeMethodArgs(args *types.Tuple, prefix string) []*MethodArg {
+func makeMethodArgs(pkg *Package, pos token.Pos, args *types.Tuple, prefix string) []*MethodArg {
 	ma := make([]*MethodArg, 0)
 	for i := 0; i < args.Len(); i++ {
 		arg := args.At(i)
@@ -136,28 +139,43 @@ func makeMethodArgs(args *types.Tuple, prefix string) []*MethodArg {
 		if name == "" {
 			name = fmt.Sprintf("%s%d", prefix, i+1)
 		}
-		ma = append(ma, NewMethodArg(name, cleanTypename(arg.Type())))
+		ma = append(ma, NewMethodArg(pkg, pos, name, cleanTypename(arg.Type())))
 	}
 	return ma
 }
 
 // Interface adds an interface declaration to the receiver.
-func (p *Package) Interface(name string, obj *types.Interface) {
-	xi := NewInterfaceDecl(name)
+func (p *Package) Interface(pos token.Pos, name string, obj *types.Interface) {
+	xi := NewInterfaceDecl(p, pos, name)
 	for i := 0; i < obj.NumMethods(); i++ {
 		fn := obj.Method(i)
 		sig := fn.Type().(*types.Signature)
-		args := makeMethodArgs(sig.Params(), "arg")
-		results := makeMethodArgs(sig.Results(), "res")
-		xm := NewMethod(fn.Name(), args, results)
+		args := makeMethodArgs(p, pos, sig.Params(), "arg")
+		results := makeMethodArgs(p, pos, sig.Results(), "res")
+		xm := NewMethod(p, pos, fn.Name(), args, results)
 		xi.Declare(xm)
 	}
 	p.Declare(xi)
 }
 
 // Typedef adds a type alias declaration to the receiver.
-func (p *Package) Typedef(name string, obj *types.Basic) {
-	p.Declare(NewTypedefDecl(name, obj.String()))
+func (p *Package) Typedef(pos token.Pos, name string, obj *types.Basic) {
+	p.Declare(NewTypedefDecl(p, pos, name, obj.String()))
+}
+
+// SourceFile returns the name of the source file where the given declaration was defined.
+func (p *Package) SourceFile(pos token.Pos) string {
+	return p.fset.Position(pos).Filename
+}
+
+// SourceLine returns the line number corresponding to a declaration's token.Pos
+func (p *Package) SourceLine(pos token.Pos) int {
+	return p.fset.Position(pos).Line
+}
+
+// SourceColumn returns the column number corresponding to a declaration's token.Pos
+func (p *Package) SourceColumn(pos token.Pos) int {
+	return p.fset.Position(pos).Column
 }
 
 func cleanTypename(t types.Type) string {
