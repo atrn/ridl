@@ -1,6 +1,6 @@
-.PHONY: all clean docs test realclean tarball
-all: ridl
-ridl:; go build
+.PHONY: all build clean docs test realclean tarball
+all: build
+build:; go build
 clean:; rm -f ridl README.html
 realclean: clean; @$(MAKE) --no-print-directory -C tests clean
 docs:; markdown README.md > README.html
