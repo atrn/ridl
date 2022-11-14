@@ -62,11 +62,12 @@ using {{.Name}} = std::map<{{restype .KeyType}}, {{restype .Type}}>;
 // Structs
 
 {{range .StructTypes}}
-struct {{.Name}} {
-{{- range .Fields}}
-    {{- if isslice .Type}}
+struct {{.Name}}
+{
+{{- range .Fields -}}
+    {{if isslice .Type -}}
     {{$t:=eltype .Type}}std::vector<{{cpptype $t}}>  _{{decap .Name}};
-    {{- else -}}
+    {{else}}
     {{$t:=eltype .Type}}{{restype $t}} _{{decap .Name}} {{dims .Type}};
     {{- end}}
 {{- end}}

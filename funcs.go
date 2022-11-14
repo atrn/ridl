@@ -12,82 +12,93 @@ import (
 	"io"
 	"log"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"unicode"
 )
 
+func mapGoToCpp(goType string) (string, bool) {
+	switch goType {
+	case "byte":
+		return "std::byte", false
+	case "error":
+		return "std::runtime_error", true
+	case "string":
+		return "std::string", true
+	case "float32":
+		return "float", false
+	case "float64":
+		return "double", false
+	case "rune":
+		return "uint32_t", false
+	case "bool":
+		return "bool", false
+	case "float":
+		return "double", false
+	case "int":
+		return "int", false
+	case "uint":
+		return "unsigned int", false
+	case "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64":
+		return goType + "_t", false
+	}
+	return goType, false
+}
+
+var (
+	arrayDimensionsPattern = regexp.MustCompile("^\\[(.*)\\](.*)")
+	mapKeyValuePattern     = regexp.MustCompile("^map\\[(.*)\\](.*)")
+)
+
 func cpptype(fullType string, asArg bool) string {
-	result := func(t string) string {
+	result := func(t string, byRef bool) string {
+		if asArg && byRef {
+			t = fmt.Sprintf("const %s &", t)
+		}
 		logdebug("cpptype %q -> %q", fullType, t)
 		return t
 	}
-	constref := func(t string) string {
-		return "const " + t + " &"
-	}
-	const (
-		stdstr  = "std::string"
-		rterror = "std::runtime_error"
-	)
-	arraySuffix := ""
+
 	goType := fullType
-	if fullType[0] == '[' {
-		end := strings.Index(fullType, "]")
-		if end == -1 {
-			panic("malformed type: " + fullType)
+
+	parts := arrayDimensionsPattern.FindStringSubmatch(fullType)
+	if parts != nil {
+		if len(parts) != 3 {
+			panic(fmt.Errorf("unexpected FindStringSubmatch extracting array info: %q", parts))
 		}
-		arraySuffix = fullType[0 : end+1]
-		goType = fullType[end+1:]
-		if asArg || arraySuffix == "[]" {
-			// slice -> pointer to T
-			arraySuffix = " *"
+
+		dim := strings.TrimSpace(parts[1])
+		goType = strings.TrimSpace(parts[2])
+		ctype, _ := mapGoToCpp(goType)
+
+		if dim == "" {
+			ctype = fmt.Sprintf("std::vector<%s>", ctype)
+		} else {
+			ctype = fmt.Sprintf("std::array<%s, %s>", ctype, dim)
 		}
-	} else if strings.HasPrefix(fullType, "map[") {
-		// FIXME: this is simplistic and fails for things like map[[2]int]some_type
-		end := strings.Index(fullType, "]")
-		if end == -1 {
-			panic("malformed type: " + fullType)
+
+		return result(ctype, true)
+	}
+
+	parts = mapKeyValuePattern.FindStringSubmatch(fullType)
+	if parts != nil {
+		if len(parts) != 3 {
+			panic(fmt.Errorf("unexpected FindStringSubmatch extracting map info: %q", parts))
 		}
-		gokey := fullType[4:end]
-		goval := fullType[end+1:]
+		ctype := ""
+		gokey := strings.TrimSpace(parts[1])
+		goval := strings.TrimSpace(parts[2])
 		ckey := cpptype(gokey, false)
 		if goval == "struct{}" {
-			return result(fmt.Sprintf("std::set<%s>", ckey))
+			ctype = fmt.Sprintf("std::set<%s>", ckey)
+		} else {
+			cval := cpptype(goval, false)
+			ctype = fmt.Sprintf("std::map<%s, %s>", ckey, cval)
 		}
-		cval := cpptype(goval, false)
-		return result(fmt.Sprintf("std::map<%s, %s>", ckey, cval))
+		return result(ctype, true)
 	}
-	switch goType {
-	case "byte":
-		return result("std::byte" + arraySuffix)
-	case "error":
-		if asArg {
-			return result(constref(rterror) + arraySuffix)
-		}
-		return result(rterror + arraySuffix)
-	case "string":
-		if asArg {
-			return result(constref(stdstr) + arraySuffix)
-		}
-		return result(stdstr + arraySuffix)
-	case "float32":
-		return result("float" + arraySuffix)
-	case "float64":
-		return result("double" + arraySuffix)
-	case "rune":
-		return result("uint32_t" + arraySuffix)
-	case "bool":
-		return result(goType + arraySuffix)
-	case "int":
-		return result(goType + arraySuffix)
-	case "uint":
-		return result("unsigned int" + arraySuffix)
-	case "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64":
-		return result(goType + "_t" + arraySuffix)
-	}
-	if asArg {
-		return result(constref(goType) + arraySuffix)
-	}
-	return result(goType + arraySuffix)
+
+	return result(mapGoToCpp(goType))
 }
 
 func cppType(t string) string {
