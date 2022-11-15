@@ -1,0 +1,12 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Color struct {
+	R, G, B, a byte
+}
+
+type Sprite struct {
+	Background Color
+	Foreground Color
+}

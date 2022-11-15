@@ -1,0 +1,6 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Tuple [3]int
+type Tuples []Tuple

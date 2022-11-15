@@ -1,0 +1,7 @@
+{{range .Typedefs}}
+.Kind       {{.Kind}}
+.Position   {{.Position}}
+.Name       {{.Name}}
+.Typename   {{.Typename}}
+.IsEnum     {{.IsEnum}}
+{{end}}

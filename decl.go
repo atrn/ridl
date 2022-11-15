@@ -10,6 +10,7 @@ package main
 import (
 	"fmt"
 	"go/token"
+	"go/types"
 )
 
 type DeclKind int
@@ -26,6 +27,30 @@ const (
 	DeclKindMethodArg
 )
 
+func (d DeclKind) String() string {
+	switch d {
+	case DeclKindConst:
+		return "DeclKindConst"
+	case DeclKindTypedef:
+		return "DeclKindTypedef"
+	case DeclKindArray:
+		return "DeclKindArray"
+	case DeclKindStruct:
+		return "DeclKindStruct"
+	case DeclKindStructField:
+		return "DeclKindStructField"
+	case DeclKindMap:
+		return "DeclKindMap"
+	case DeclKindInterface:
+		return "DeclKindInterface"
+	case DeclKindMethod:
+		return "DeclKindMethod"
+	case DeclKindMethodArg:
+		return "DeclKindMethodArg"
+	}
+	panic(fmt.Errorf("bad DeclKind value == %d", int(d)))
+}
+
 //  ================================================================
 
 // The Decl interface is used to retrieve information common
@@ -36,25 +61,17 @@ type Decl interface {
 	//
 	Name() string
 
-	// The Type method returns the receiver's Go type as a string.
+	// The Typename method returns the receiver's Go type as a string.
 	//
-	Type() string
+	Typename() string
 
 	// The kind of declaration.
 	//
 	Kind() DeclKind
 
-	// Name of the file in which this declaration was made.
+	// The Position method returns the location of the declaration.
 	//
-	Filename() string
-
-	// Line number within Filename() on which the declaration occurred.
-	//
-	Line() int
-
-	// Column on Line() of Filename() where the declaration was found.
-	//
-	Column() int
+	Position() token.Position
 }
 
 type SizedDecl interface {
@@ -68,14 +85,17 @@ type SizedDecl interface {
 // decl type is embedded in declaration types.
 type decl struct {
 	pkg  *Package
-	name string
+	obj  types.Object
 	kind DeclKind
-	pos  token.Pos
 }
 
 // Name returns the receiver's name, a Go identifier.
 func (d *decl) Name() string {
-	return d.name
+	return d.obj.Id()
+}
+
+func (d *decl) Typename() string {
+	return TrimUntyped(d.obj.Type().String())
 }
 
 // Kind returns the kind of declaration.
@@ -83,50 +103,52 @@ func (d *decl) Kind() DeclKind {
 	return d.kind
 }
 
-func (d *decl) Filename() string {
-	return d.pkg.SourceFile(d.pos)
+// Position returns the declaration's token.Position.
+func (d *decl) Position() token.Position {
+	return d.pkg.Position(d.obj.Pos())
 }
 
-func (d *decl) Line() int {
-	return d.pkg.SourceLine(d.pos)
-}
-
-func (d *decl) Column() int {
-	return d.pkg.SourceColumn(d.pos)
-}
-
+// IsConst returns true if the declaration is a const
 func (d *decl) IsConst() bool {
 	return d.kind == DeclKindConst
 }
 
+// IsTypedef returns true if the declaration is a typedef
 func (d *decl) IsTypedef() bool {
 	return d.kind == DeclKindTypedef
 }
 
+// IsArray returns true if the declaration is an array
 func (d *decl) IsArray() bool {
 	return d.kind == DeclKindArray
 }
 
+// IsStruct returns true if the declaration is a struct
 func (d *decl) IsStruct() bool {
 	return d.kind == DeclKindStruct
 }
 
+// IsStructField returns true if the declaration is a struct field
 func (d *decl) IsStructField() bool {
 	return d.kind == DeclKindStructField
 }
 
+// IsMap returns true if the declaration is a map
 func (d *decl) IsMap() bool {
 	return d.kind == DeclKindMap
 }
 
+// IsInterface returns true if the declaration is an interface
 func (d *decl) IsInterface() bool {
 	return d.kind == DeclKindInterface
 }
 
+// IsMethod returns true if the declaration is a method
 func (d *decl) IsMethod() bool {
 	return d.kind == DeclKindMethod
 }
 
+// IsMethodArg returns true if the declaration is a method argument
 func (d *decl) IsMethodArg() bool {
 	return d.kind == DeclKindMethodArg
 }
@@ -147,27 +169,23 @@ func (d *sizedDecl) Size() int64 {
 
 //  ================================================================
 
-// The ConstDecl type represents a constant. A constant has:
-// - a name
-// - a type
-// - a value
-// - a size
+// The ConstDecl type represents a constant.
 type ConstDecl struct {
 	decl
-	typ          string
-	Value        string
-	ExactValue   string
 	IsEnumerator bool
 }
 
 // NewConstDecl returns a new ConstDecl with the given name, type and value.
-func NewConstDecl(pkg *Package, pos token.Pos, name, typ, value, exact string) *ConstDecl {
-	return &ConstDecl{decl{pkg, name, DeclKindConst, pos}, typ, value, exact, false}
+func NewConstDecl(pkg *Package, obj types.Object) *ConstDecl {
+	return &ConstDecl{decl{pkg, obj, DeclKindConst}, false}
 }
 
-// Type returns the receiver's type.
-func (decl *ConstDecl) Type() string {
-	return decl.typ
+func (decl *ConstDecl) Value() string {
+	return decl.obj.(*types.Const).Val().String()
+}
+
+func (decl *ConstDecl) ExactValue() string {
+	return decl.obj.(*types.Const).Val().ExactString()
 }
 
 //  ================================================================
@@ -180,20 +198,20 @@ func (decl *ConstDecl) Type() string {
 //
 type TypedefDecl struct {
 	decl
-	Alias  string
-	IsEnum bool
+	typedef *types.Basic
+	IsEnum  bool
 }
 
 // NewTypedefDecl returns a new TypdefDecl with the given
 // name and aliased type.
-func NewTypedefDecl(pkg *Package, pos token.Pos, name, alias string) *TypedefDecl {
-	return &TypedefDecl{decl{pkg, name, DeclKindTypedef, pos}, alias, false}
+func NewTypedefDecl(pkg *Package, obj types.Object, typedef *types.Basic) *TypedefDecl {
+	return &TypedefDecl{decl{pkg, obj, DeclKindTypedef}, typedef, false}
 }
 
 // Type returns the receiver's type, the alias part of
 // the type declaration.
-func (t *TypedefDecl) Type() string {
-	return t.Alias
+func (decl *TypedefDecl) Typename() string {
+	return decl.typedef.String()
 }
 
 //  ================================================================
@@ -202,41 +220,50 @@ func (t *TypedefDecl) Type() string {
 // being interpreted as an unbounded array).
 type ArrayDecl struct {
 	sizedDecl
-	typ    string
-	length int // 0 means variable, i.e. a slice
+	elType types.Type
 }
 
 // NewArrayDecl returns a new ArrayDecl with the supplied name,
 // element type and size. A size of 0 implies an unbounded
 // array, or vector, type.
-func NewArrayDecl(pkg *Package, pos token.Pos, name, typ string, length int, size int64) *ArrayDecl {
-	return &ArrayDecl{sizedDecl{decl{pkg, name, DeclKindArray, pos}, size}, typ, length}
+func NewArrayDecl(pkg *Package, obj types.Object, elType types.Type, size int64) *ArrayDecl {
+	return &ArrayDecl{sizedDecl{decl{pkg, obj, DeclKindArray}, size}, elType}
+}
+
+func (a *ArrayDecl) asArray() *types.Array {
+	return a.obj.Type().Underlying().(*types.Array)
 }
 
 // Length returns the number of elements in the receiver.
 func (a *ArrayDecl) Length() int {
-	return a.length
-}
-
-// ElemType returns the type of the elements.
-func (a *ArrayDecl) ElemType() string {
-	return a.typ
-}
-
-// Type returns the receiver's type.
-func (a *ArrayDecl) Type() string {
-	if a.length == 0 {
-		return "[]" + a.typ
+	switch t := a.obj.Type().Underlying().(type) {
+	case *types.Array:
+		return int(t.Len())
+	case *types.Slice:
+		return 0
 	}
-	return fmt.Sprintf("[%d]%s", a.length, a.typ)
+	panic(fmt.Errorf("unexpected underlying type %T", a.obj.Type().Underlying()))
+}
+
+// ElTypename returns the type of the elements.
+func (a *ArrayDecl) ElTypename() string {
+	return a.elType.String()
+}
+
+// Typename returns the name of the receiver's type.
+func (a *ArrayDecl) Typename() string {
+	if a.IsVariableLength() {
+		return fmt.Sprintf("[]%s", a.ElTypename())
+	}
+	return fmt.Sprintf("[%d]%s", a.Length(), a.ElTypename())
 }
 
 func (a *ArrayDecl) IsVariableLength() bool {
-	return a.length == 0
+	return a.Length() == 0
 }
 
 func (a *ArrayDecl) IsFixedLength() bool {
-	return a.length != 0
+	return a.Length() != 0
 }
 
 // ================================================================
@@ -251,8 +278,8 @@ type StructDecl struct {
 
 // NewStructDecl returns a new, empty, StructDecl with the
 // given name.
-func NewStructDecl(pkg *Package, pos token.Pos, name string, size int64) *StructDecl {
-	return &StructDecl{sizedDecl{decl{pkg, name, DeclKindStruct, pos}, size}, nil}
+func NewStructDecl(pkg *Package, obj types.Object, size int64) *StructDecl {
+	return &StructDecl{sizedDecl{decl{pkg, obj, DeclKindStruct}, size}, nil}
 }
 
 // AddField appends a field to the receiver's collection of fields.
@@ -261,8 +288,8 @@ func (decl *StructDecl) AddField(f *StructField) {
 }
 
 // Type returns the receiver's type.
-func (decl *StructDecl) Type() string {
-	return "struct " + decl.Name()
+func (decl *StructDecl) Typename() string {
+	return decl.Name()
 }
 
 //  ================================================================
@@ -272,7 +299,6 @@ func (decl *StructDecl) Type() string {
 // fields with an empty Name.
 type StructField struct {
 	sizedDecl
-	typ       string
 	Tag       []StructFieldTag
 	offset    int64
 	alignment int64
@@ -280,13 +306,12 @@ type StructField struct {
 
 // NewStructField returns a new StructField with the given name and
 // type.
-func NewStructField(pkg *Package, pos token.Pos, name, typ string, size, offset, alignment int64) *StructField {
-	return &StructField{sizedDecl{decl{pkg, name, DeclKindStructField, pos}, size}, typ, nil, offset, alignment}
+func NewStructField(pkg *Package, obj types.Object, size, offset, alignment int64) *StructField {
+	return &StructField{sizedDecl{decl{pkg, obj, DeclKindStructField}, size}, nil, offset, alignment}
 }
 
-// Type returns the receiver's type.
-func (sf *StructField) Type() string {
-	return sf.typ
+func (sf *StructField) Name() string {
+	return sf.obj.Name()
 }
 
 func (sf *StructField) Offset() int64 {
@@ -311,24 +336,24 @@ type StructFieldTag struct {
 // MapDecl represents a map declaration.
 type MapDecl struct {
 	decl
-	keytyp string
-	valtyp string
+	keyType types.Object
+	valType types.Object
 }
 
 // NewMapDecl returns a new MapDecl with the given name,
 // and key and value types.
-func NewMapDecl(pkg *Package, pos token.Pos, name, keytyp, valtyp string) *MapDecl {
-	return &MapDecl{decl{pkg, name, DeclKindMap, pos}, keytyp, valtyp}
+func NewMapDecl(pkg *Package, obj, keyType, valType types.Object) *MapDecl {
+	return &MapDecl{decl{pkg, obj, DeclKindMap}, keyType, valType}
 }
 
 // KeyType returns the type, as a string, of the receiver's keys.
-func (decl *MapDecl) KeyType() string {
-	return decl.keytyp
+func (decl *MapDecl) KeyTypename() string {
+	return decl.keyType.Name()
 }
 
 // Type returns the type of the receiver's values.
-func (decl *MapDecl) Type() string {
-	return decl.valtyp
+func (decl *MapDecl) Typename() string {
+	return decl.valType.Name()
 }
 
 //  ================================================================
@@ -343,13 +368,13 @@ type InterfaceDecl struct {
 
 // NewInterfaceDecl returns a new, empty, InterfaceDecl with the
 // given name.
-func NewInterfaceDecl(pkg *Package, pos token.Pos, name string) *InterfaceDecl {
-	return &InterfaceDecl{decl{pkg, name, DeclKindInterface, pos}, nil, nil}
+func NewInterfaceDecl(pkg *Package, obj types.Object) *InterfaceDecl {
+	return &InterfaceDecl{decl{pkg, obj, DeclKindInterface}, nil, nil}
 }
 
 // Type returns the receiver's type.
-func (decl *InterfaceDecl) Type() string {
-	return "interface " + decl.Name()
+func (decl *InterfaceDecl) Typename() string {
+	return "interface " + decl.obj.Name()
 }
 
 // Declare appends a method declaration to the interface.
@@ -375,13 +400,13 @@ type MethodDecl struct {
 
 // NewMethod returns a new Method with the given name, arguments
 // and results.
-func NewMethod(pkg *Package, pos token.Pos, name string, args []*MethodArg, results []*MethodArg) *MethodDecl {
-	return &MethodDecl{decl{pkg, name, DeclKindMethod, pos}, args, results}
+func NewMethod(pkg *Package, obj types.Object, args []*MethodArg, results []*MethodArg) *MethodDecl {
+	return &MethodDecl{decl{pkg, obj, DeclKindMethod}, args, results}
 }
 
 // Type returns the receiver's type.
-func (decl *MethodDecl) Type() string {
-	return "func " + decl.Name()
+func (decl *MethodDecl) Typename() string {
+	return decl.Name()
 }
 
 //  ================================================================
@@ -390,17 +415,22 @@ func (decl *MethodDecl) Type() string {
 // Method. A MethodArg has a name and a type. The name may be empty.
 type MethodArg struct {
 	decl
-	typ string
+	name string
 }
 
 // NewMethodArg retusn a new MethodArg with the given name and type.
-func NewMethodArg(pkg *Package, pos token.Pos, name, typ string) *MethodArg {
-	return &MethodArg{decl{pkg, name, DeclKindMethodArg, pos}, typ}
+func NewMethodArg(pkg *Package, obj types.Object, name string) *MethodArg {
+	return &MethodArg{decl{pkg, obj, DeclKindMethodArg}, name}
 }
 
 // Type returns the receiver's type.
-func (decl *MethodArg) Type() string {
-	return decl.typ
+func (decl *MethodArg) Typename() string {
+	return decl.obj.Name()
+}
+
+//
+func (decl *MethodArg) Name() string {
+	return decl.name
 }
 
 //  ================================================================

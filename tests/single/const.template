@@ -1,0 +1,8 @@
+{{range .Constants}}
+.Kind       {{.Kind}}
+.Position   {{.Position}}
+.Name       {{.Name}}
+.Typename   {{.Typename}}
+.Value      {{.Value}}
+.ExactValue {{.ExactValue}}
+{{end}}

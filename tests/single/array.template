@@ -1,0 +1,10 @@
+{{range .ArrayTypes}}
+.Kind       {{.Kind}}
+.Position   {{.Position}}
+.Name       {{.Name}}
+.Typename   {{.Typename}}
+.Length     {{.Length}}
+.ElTypename {{.ElTypename}}
+.IsVariableLength       {{.IsVariableLength}}
+.IsFixedLength  {{.IsFixedLength}}
+{{end}}

@@ -1,0 +1,14 @@
+{{range .StructTypes}}
+.Kind       {{.Kind}}
+.Position   {{.Position}}
+.Name       {{.Name}}
+.Typename   {{.Typename}}
+
+{{len .Fields}} Fields:
+{{range .Fields}}
+    Offset: {{.Offset}}
+    Size:   {{.Size}}
+    Name:   {{.Name}}
+    Type:   {{.Typename}}
+{{end}}
+{{end}}

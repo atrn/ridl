@@ -1,0 +1,5 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type CoordType float32

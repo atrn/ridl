@@ -1,0 +1,13 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Header struct {
+	Code uint16
+	Size uint16
+}
+
+type Message struct {
+	Header
+	Payload [32]float32
+}

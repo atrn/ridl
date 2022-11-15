@@ -1,0 +1,12 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Colorspace int
+
+const (
+	Srgb Colorspace = iota
+	Cmyk
+	Hls
+	Yuv
+)

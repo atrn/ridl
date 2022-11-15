@@ -15,17 +15,17 @@ func (p *Package) Dump() {
 	for _, decl := range p.Decls {
 		switch actual := decl.(type) {
 		case *TypedefDecl:
-			fmt.Print("typedef ", decl.Type(), " ", decl.Name(), ";\n")
+			fmt.Print("typedef ", decl.Typename(), " ", decl.Name(), ";\n")
 			fmt.Println("")
 		case *StructDecl:
-			fmt.Print(decl.Type(), " {\n")
+			fmt.Print(decl.Typename(), " {\n")
 			for _, field := range actual.Fields {
-				fmt.Print("    ", cpptype(field.Type(), false), " _", field.Name(), ";\n")
+				fmt.Print("    ", cpptype(field.Typename(), false), " _", field.Name(), ";\n")
 			}
 			fmt.Println("};")
 			fmt.Println("")
 		case *ConstDecl:
-			fmt.Print("extern const ", cpptype(decl.Type(), false), " ", decl.Name(), ";\n")
+			fmt.Print("extern const ", cpptype(decl.Typename(), false), " ", decl.Name(), ";\n")
 			fmt.Println("")
 		case *InterfaceDecl:
 			fmt.Println("class ", decl.Name(), "{")
@@ -35,7 +35,7 @@ func (p *Package) Dump() {
 				fmt.Print("    virtual void ", method.Name(), "(")
 				argsep := ""
 				for _, arg := range method.Args {
-					fmt.Print(argsep, cpptype(arg.Type(), true), " ", arg.Name())
+					fmt.Print(argsep, cpptype(arg.Typename(), true), " ", arg.Name())
 					argsep = ", "
 				}
 				for index, res := range method.Results {
@@ -43,14 +43,14 @@ func (p *Package) Dump() {
 					if name == "" {
 						name = fmt.Sprintf("out%d", index+1)
 					}
-					fmt.Print(argsep, cpptype(res.Type(), false), " *", name)
+					fmt.Print(argsep, cpptype(res.Typename(), false), " *", name)
 				}
 				fmt.Println(") = 0;")
 			}
 			fmt.Println("};")
 			fmt.Println("")
 		default:
-			fmt.Print(cpptype(decl.Type(), false), " ", decl.Name(), ";\n")
+			fmt.Print(cpptype(decl.Typename(), false), " ", decl.Name(), ";\n")
 		}
 	}
 	fmt.Println("} // namespace", p.PackageName)

@@ -1,0 +1,7 @@
+// -*- go -*-
+
+package ridl_tests
+
+type Row [2]float32
+
+type Grid [2]Row

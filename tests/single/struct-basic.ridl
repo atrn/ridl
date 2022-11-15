@@ -1,0 +1,7 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Point struct {
+	X, Y float32
+}

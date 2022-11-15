@@ -54,3 +54,7 @@ func TrimExtension(path string) string {
 	ext := filepath.Ext(path)
 	return strings.TrimSuffix(path, ext)
 }
+
+func TrimUntyped(t string) string {
+	return strings.TrimPrefix(t, "untyped ")
+}

@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"go/types"
 	"strings"
 	"time"
 )
@@ -96,33 +97,16 @@ func NewContext(directory string, filenames []string, pkg *Package) *Context {
 	return context
 }
 
-func isInteger(typ string) bool {
-	integralTypes := map[string]struct{}{
-		"byte":   {},
-		"uint8":  {},
-		"uint16": {},
-		"uint32": {},
-		"uint64": {},
-		"int8":   {},
-		"int16":  {},
-		"int32":  {},
-		"int64":  {},
-		"int":    {},
-	}
-	_, isInt := integralTypes[typ]
-	return isInt
-}
-
 func (c *Context) findEnums() {
 	typedefs := make(map[string]*TypedefDecl, len(c.Typedefs))
 	for _, t := range c.Typedefs {
-		if isInteger(t.Alias) {
+		if t.typedef.Info() == types.IsInteger {
 			typedefs[t.Name()] = t
 		}
 	}
 	m := make(map[*TypedefDecl][]*ConstDecl)
 	for _, constant := range c.Constants {
-		t, found := typedefs[constant.Type()]
+		t, found := typedefs[constant.Typename()]
 		if found {
 			m[t] = append(m[t], constant)
 			t.IsEnum = true

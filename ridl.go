@@ -102,11 +102,8 @@ func getOutputWriter(filename string) (io.WriteCloser, error) {
 	if *dryRunFlag {
 		return NopWriteCloser(io.Discard), nil
 	}
-	if filename == StdoutFilename {
+	if filename == StdoutFilename || filename == "" {
 		return NopWriteCloser(os.Stdout), nil
-	}
-	if filename == "" {
-		return NopWriteCloser(io.Discard), nil
 	}
 	w, err := os.Create(filename)
 	if err != nil {

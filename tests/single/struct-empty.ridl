@@ -1,0 +1,6 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Empty struct {
+}
