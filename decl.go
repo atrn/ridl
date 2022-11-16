@@ -9,8 +9,10 @@ package main
 
 import (
 	"fmt"
+	"go/constant"
 	"go/token"
 	"go/types"
+	"sort"
 )
 
 type DeclKind int
@@ -180,8 +182,8 @@ func NewConstDecl(pkg *Package, obj types.Object) *ConstDecl {
 	return &ConstDecl{decl{pkg, obj, DeclKindConst}, false}
 }
 
-func (decl *ConstDecl) Value() string {
-	return decl.obj.(*types.Const).Val().String()
+func (decl *ConstDecl) Value() constant.Value {
+	return decl.obj.(*types.Const).Val()
 }
 
 func (decl *ConstDecl) ExactValue() string {
@@ -440,4 +442,24 @@ func (decl *MethodArg) Name() string {
 type Enum struct {
 	Type        *TypedefDecl
 	Enumerators []*ConstDecl
+	IsDense     bool
+}
+
+func enumIsDense(enumerators []*ConstDecl) bool {
+	sz := len(enumerators)
+	if sz < 2 {
+		return true
+	}
+	values := make([]int, sz)
+	for i := range enumerators {
+		n, _ := constant.Int64Val(enumerators[i].Value())
+		values[i] = int(n)
+	}
+	sort.Ints(values)
+	for i := 1; i < len(values); i++ {
+		if values[i]-values[i-1] != 1 {
+			return false
+		}
+	}
+	return true
 }

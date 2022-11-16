@@ -1,14 +1,20 @@
 // -*- mode:go-template -*-
 
 {{range .Enums }}
-enum class {{.Typedef.Name}} : {{.Typedef.Alias}}
+enum class {{.Type.Name}} : {{.Type.Typename}}
 {
-{{- range .Constants}}
+{{- if .IsDense}}
+{{- range .Enumerators}}
+    {{.Name}},
+{{- end}}
+{{- else}}
+{{- range .Enumerators}}
     {{.Name}} = {{.Value}},
+{{- end}}
 {{- end}}
 };
 {{end}}
 
 {{range .NotEnums}}
-const {{.Type}} {{.Name}} = {{.Value}};
+const {{.Typename}} {{.Name}} = {{.Value}};
 {{end}}

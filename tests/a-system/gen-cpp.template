@@ -68,7 +68,16 @@ enum class {{.Typedef.Name}} : {{.Typedef.Alias}}
             {{else}}
                void
             {{- end}}
-            {{.Name}}({{- range $index, $arg := .Args}}{{if eq $index 0}}{{else}}, {{end}}{{argtype $arg.Type}} {{$arg.Name}}{{end}}) = 0;
+            {{.Name}}(
+            {{- range $index, $arg := .Args}}
+            {{if eq $index 0}}{{else}}, {{end}}
+            {{if $arg.IsStruct}}
+            const {{argtype $arg.Type}} & {{$arg.Name}}
+            {{else}}
+            {{argtype $arg.Type}} {{$arg.Name}}
+            {{end}}
+            {{end}}
+            ) = 0;
         {{- end}}
         };
     {{- else -}}

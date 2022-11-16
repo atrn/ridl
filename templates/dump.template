@@ -25,22 +25,22 @@
 
 ## Declarations
 
-| Name  | Type  |
-|:--|:--|
+| Name  | Type  | File | Line | Column |
+|:----- |:----- |:---- |:---- |:-------|
 {{- if len .Decls}}
 {{range .Decls -}}
-| {{.Name}} | `{{.Type}}` |
+| {{.Name}} | `{{.Typename}}` | {{.Position.Filename}} | {{.Position.Line}} | {{.Position.Column}} |
 {{end}}
 {{else}}
 | None ||
 {{end}}
 
 ## Typedefs
-| Name | Type | Alias |
+| Name | Type
 |:--|:--|:--|
 {{- if len .Typedefs}}
 {{range .Typedefs -}}
-| {{.Name}} | {{.Type}} | {{.Alias}} |
+| {{.Name}} | {{.Typename}}
 {{end}}
 {{else}}
 | None |||
@@ -51,7 +51,7 @@
 | :--- | :--- | :----- | :------- |
 {{- if len .ArrayTypes}}
 {{range .ArrayTypes -}}
-| {{.Name}} | {{.Type}} | {{.Length}} | {{.Size}} |
+| {{.Name}} | {{.Typename}} | {{.Length}} | {{.Size}} |
 {{end}}
 {{else}}
 | None ||||
@@ -62,7 +62,7 @@
 {{range .StructTypes}}
 - `{{.Name}}`
 {{- range .Fields}}
-    - {{.Name}} {{.Type}}
+    - {{.Name}} {{.Typename}}
 {{- end}}
 {{end}}
 {{end}}
@@ -73,15 +73,15 @@
 {{range .Methods -}}
 - {{.Name}}
 {{range .Args}}
-    - '{{.Name}}' {{.Type}}
+    - '{{.Name}}' {{.Typename}}
 {{- end}}
 {{- end}}
 {{end}}
 
 ## Constants:
 
-| Name | Type | Value |
-| :--- | :--- | :--- |
+| Name | Type | Value | Exact Value |
+| :--- | :--- | :--- | :---- |
 {{range .Constants -}}
-| {{.Name}} | {{.Type}} | {{.Value}} |
+| {{.Name}} | {{.Typename}} | {{.Value}} | {{.ExactValue}} |
 {{end}}

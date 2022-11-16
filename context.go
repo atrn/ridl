@@ -116,6 +116,7 @@ func (c *Context) findEnums() {
 		}
 	}
 	for typedef, constants := range m {
-		c.Enums = append(c.Enums, &Enum{typedef, constants})
+		e := &Enum{typedef, constants, enumIsDense(constants)}
+		c.Enums = append(c.Enums, e)
 	}
 }

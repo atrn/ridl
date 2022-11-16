@@ -12,7 +12,7 @@ test:
 	    echo; \
 	done
 
-array const enum struct typedef:
+array const enum interface struct typedef:
 	@$(MAKE) 'tests=$@-*.ridl' test
 
 parse-module-test:
