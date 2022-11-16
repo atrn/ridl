@@ -123,7 +123,7 @@ func makeMethodArgs(pkg *Package, obj types.Object, args *types.Tuple, prefix st
 		if name == "" {
 			name = fmt.Sprintf("%s%d", prefix, i+1)
 		}
-		ma = append(ma, NewMethodArg(pkg, obj, TrimUntyped(arg.Type().String())))
+		ma = append(ma, NewMethodArg(pkg, arg, name))
 	}
 	return ma
 }

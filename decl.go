@@ -362,8 +362,8 @@ func (decl *MapDecl) Typename() string {
 // is a, named, collection of zero or more Methods.
 type InterfaceDecl struct {
 	decl
-	Methods []*MethodDecl
-	Embeds  []string
+	Methods  []*MethodDecl
+	embedded []*InterfaceDecl
 }
 
 // NewInterfaceDecl returns a new, empty, InterfaceDecl with the
@@ -383,8 +383,8 @@ func (decl *InterfaceDecl) Declare(method *MethodDecl) {
 }
 
 // Embed appends an embedded interface to the interface.
-func (decl *InterfaceDecl) Embed(n string) {
-	decl.Embeds = append(decl.Embeds, n)
+func (decl *InterfaceDecl) Embed(intf *InterfaceDecl) {
+	decl.embedded = append(decl.embedded, intf)
 }
 
 //  ================================================================
@@ -425,10 +425,9 @@ func NewMethodArg(pkg *Package, obj types.Object, name string) *MethodArg {
 
 // Type returns the receiver's type.
 func (decl *MethodArg) Typename() string {
-	return decl.obj.Name()
+	return decl.obj.Type().String()
 }
 
-//
 func (decl *MethodArg) Name() string {
 	return decl.name
 }

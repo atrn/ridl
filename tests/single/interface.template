@@ -1,0 +1,26 @@
+{{range .Interfaces}}
+.Kind       {{.Kind}}
+.Position   {{.Position}}
+.Name       {{.Name}}
+.Typename   {{.Typename}}
+
+#Methods: {{len .Methods}}
+{{- range .Methods}}
+    .Name:      {{.Name}}
+    .Args:      {{len .Args}}
+    .Results:   {{len .Results}}
+    {{if .Args}}
+    Arguments:
+        {{- range .Args}}
+        {{.Name}} {{.Typename}} ({{argtype .Typename}})
+        {{- end}}
+    {{- end}}
+
+    {{- if .Results}}
+    Results:
+        {{- range .Results}}
+        {{.Name}} {{.Typename}} ({{restype .Typename}})
+        {{- end}}
+    {{- end}}
+{{end}}
+{{end}}

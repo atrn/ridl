@@ -1,0 +1,14 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type BasicInterface interface {
+	NoArgs()
+	OneIntArg(argument1 int)
+	IntArgFloatArg(argument1 int, argument2 float32)
+	NoArgsOneResult() bool
+	OneArgOneResult(int) string
+	OneArgTwoResults(string) (int, error)
+	Resample([]float32, int) []float32
+	Convert([4]byte) uint32
+}
