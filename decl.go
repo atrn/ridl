@@ -439,6 +439,6 @@ func (decl *MethodArg) Name() string {
 // using the Go idiom of defining a type and a series of constants of
 // that type.
 type Enum struct {
-	Typedef   *TypedefDecl
-	Constants []*ConstDecl
+	Type        *TypedefDecl
+	Enumerators []*ConstDecl
 }

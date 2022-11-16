@@ -1,0 +1,13 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type Bitmask int
+
+const (
+	Bit0    Bitmask = 1
+	Bit1    Bitmask = 2
+	Bit2    Bitmask = 4
+	Bit3    Bitmask = 8
+	AllBits         = Bit0 | Bit1 | Bit2 | Bit3
+)

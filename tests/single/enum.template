@@ -1,0 +1,10 @@
+{{range .Enums}}
+.Type.Name     {{.Type.Name}}
+.Type.Typename {{.Type.Typename}}
+.Type.Position {{.Type.Position}}
+
+{{len .Enumerators}} .Enumerators
+{{- range $index, $e := .Enumerators}}
+#{{plus $index 1}} {{$e.Name | printf "%-8s"}} == {{$e.Value}}
+{{- end}}
+{{end}}

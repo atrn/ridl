@@ -133,10 +133,6 @@ func tolower(s string) string {
 	return strings.ToLower(s)
 }
 
-func plus(a, b int) int {
-	return a + b
-}
-
 func eltype(t string) string {
 	if t[0] != '[' {
 		return t
@@ -187,6 +183,22 @@ func decap(s string) string {
 	return s
 }
 
+func add(a, b int) int {
+	return a + b
+}
+
+func subtract(a, b int) int {
+	return a - b
+}
+
+func multiply(a, b int) int {
+	return a * b
+}
+
+func divide(a, b int) int {
+	return a / b
+}
+
 var cppTemplateFuncs = map[string]interface{}{
 	"argtype":  argType,
 	"basename": basename,
@@ -194,7 +206,10 @@ var cppTemplateFuncs = map[string]interface{}{
 	"dims":     dims,
 	"eltype":   eltype,
 	"isslice":  isslice,
-	"plus":     plus,
+	"add":      add,
+	"subtract": subtract,
+	"multiply": multiply,
+	"divide":   divide,
 	"restype":  resType,
 	"tolower":  tolower,
 	"decap":    decap,
