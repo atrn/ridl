@@ -39,7 +39,7 @@ inline header make_header(uint16_t pkgid, uint16_t msgid) {
 {{$interface := .Name}}
 {{- range .Methods -}}
 const auto {{$interface}}_{{.Name}}_msgcode = make_msgcode(PackageID, {{$msgid}});
-{{$msgid = plus $msgid 1}}
+{{$msgid = add $msgid 1}}
 {{- end}}
 {{- end}}
 
@@ -48,7 +48,7 @@ const auto {{$interface}}_{{.Name}}_msgcode = make_msgcode(PackageID, {{$msgid}}
 {{- range .Methods}}
 struct {{$interface}}_{{.Name}}_Args {
 {{- range $index, $arg := .Args}}
-    {{restype $arg.Type}} _{{$arg.Name}};
+    {{restype $arg.Typename}} _{{$arg.Name}};
 {{- end}}
 };
 

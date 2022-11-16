@@ -1,6 +1,6 @@
 // Constants
 {{range .Constants}}
-const {{cpptype .Type}} {{.Name}} = {{.Value}};
+const {{cpptype .Typename}} {{.Name}} = {{.Value}};
 {{end}}
 
 // Arrays
@@ -12,7 +12,7 @@ const {{cpptype .Type}} {{.Name}} = {{.Value}};
 struct {{.Name}} // size {{.Size}}
 {
 {{- range .Fields}}
-    {{cpptype .Type}}	{{.Name}}; // @ {{.Offset}}, {{.Size}} bytes
+    {{cpptype .Typename}}	{{.Name}}; // @ {{.Offset}}, {{.Size}} bytes
 {{- end}}
 };
 {{end}}
