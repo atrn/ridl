@@ -23,7 +23,7 @@ namespace {{.PackageName}} {
 
 {{range .Typedefs}}
 {{if not .IsEnum}}
-using {{.Name}} = {{cpptype .Alias}};
+using {{.Name}} = {{cpptype .Typename}};
 {{- end}}
 {{- end}}
 {{- end}}
@@ -33,15 +33,15 @@ using {{.Name}} = {{cpptype .Alias}};
 // Constants
 
 {{range .NotEnums}}
-const {{cpptype .Type}} {{.Name}} = {{.Value}};
+const {{cpptype .Typename}} {{.Name}} = {{.Value}};
 {{- end}}
 {{- end}}
 
 {{- if .Enums}}
 {{range .Enums}}
-enum {{.Typedef.Name}} : {{cpptype .Typedef.Alias}}
+enum {{.Type.Name}} : {{cpptype .Type.Typename}}
 {
-{{- range .Constants}}
+{{- range .Enumerators}}
     {{.Name}} = {{.Value}},
 {{- end}}
 };
@@ -53,7 +53,7 @@ enum {{.Typedef.Name}} : {{cpptype .Typedef.Alias}}
 // Maps
 
 {{- range .MapTypes}}
-using {{.Name}} = std::map<{{restype .KeyType}}, {{restype .Type}}>;
+using {{.Name}} = std::map<{{restype .KeyType}}, {{restype .Typename}}>;
 {{- end}}
 {{- end}}
 
@@ -65,10 +65,10 @@ using {{.Name}} = std::map<{{restype .KeyType}}, {{restype .Type}}>;
 struct {{.Name}}
 {
 {{- range .Fields -}}
-    {{if isslice .Type -}}
-    {{$t:=eltype .Type}}std::vector<{{cpptype $t}}>  _{{decap .Name}};
+    {{if isslice .Typename -}}
+    {{$t:=eltype .Typename}}std::vector<{{cpptype $t}}>  _{{decap .Name}};
     {{else}}
-    {{$t:=eltype .Type}}{{restype $t}} _{{decap .Name}} {{dims .Type}};
+    {{$t:=eltype .Typename}}{{restype $t}} _{{decap .Name}} {{dims .Typename}};
     {{- end}}
 {{- end}}
 };
@@ -81,7 +81,7 @@ struct {{.Name}}
 // Arrays
 
 {{- range .ArrayTypes}}
-using {{.Name}} = {{if .IsVariableLength}}std::vector<{{cpptype .ElemType}}>{{else}}std::array<{{cpptype .ElemType}}, {{.Length}}>{{end}};
+using {{.Name}} = {{if .IsVariableLength}}std::vector<{{cpptype .ElTypename}}>{{else}}std::array<{{cpptype .ElTypename}}, {{.Length}}>{{end}};
 {{- end}}
 {{- end}}
 
@@ -96,7 +96,7 @@ using {{.Name}} = {{if .IsVariableLength}}std::vector<{{cpptype .ElemType}}>{{el
 {{- else -}}
 struct {{$interface}}_{{.Name}}_Result {
 {{- range $index, $arg := .Results}}
-    {{restype $arg.Type}} _{{$arg.Name}};
+    {{restype $arg.Typename}} _{{$arg.Name}};
 {{- end}}
 };
 {{end -}}
@@ -115,10 +115,10 @@ public:
     virtual
 {{- if .Results -}}
 {{- $n := len .Results}}
- {{if eq $n 1}}{{$val := index .Results 0}}{{restype $val.Type}}{{else}}{{$interface}}_{{.Name}}_Result{{end -}}
+ {{if eq $n 1}}{{$val := index .Results 0}}{{restype $val.Typename}}{{else}}{{$interface}}_{{.Name}}_Result{{end -}}
 {{else}}
  void
-{{- end}} {{.Name}}({{- range $index, $arg := .Args}}{{if eq $index 0}}{{else}}, {{end}}{{argtype $arg.Type}} {{$arg.Name}}{{end}}) = 0;
+{{- end}} {{.Name}}({{- range $index, $arg := .Args}}{{if eq $index 0}}{{else}}, {{end}}{{argtype $arg.Typename}} {{$arg.Name}}{{end}}) = 0;
 {{- end}}
 };
 {{- end}}
