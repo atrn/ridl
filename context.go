@@ -99,7 +99,7 @@ func NewContext(directory string, filenames []string, pkg *Package) *Context {
 func (c *Context) findEnums() {
 	typedefs := make(map[string]*TypedefDecl, len(c.Typedefs))
 	for _, t := range c.Typedefs {
-		if t.typedef.Info() == types.IsInteger || t.typedef.Info() == types.IsUnsigned {
+		if (t.typedef.Info() & types.IsInteger) != 0 {
 			typedefs[t.Name()] = t
 		}
 	}
