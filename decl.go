@@ -12,7 +12,6 @@ import (
 	"go/constant"
 	"go/token"
 	"go/types"
-	"sort"
 )
 
 type DeclKind int
@@ -32,23 +31,23 @@ const (
 func (d DeclKind) String() string {
 	switch d {
 	case DeclKindConst:
-		return "DeclKindConst"
+		return "const"
 	case DeclKindTypedef:
-		return "DeclKindTypedef"
+		return "type"
 	case DeclKindArray:
-		return "DeclKindArray"
+		return "array"
 	case DeclKindStruct:
-		return "DeclKindStruct"
+		return "struct"
 	case DeclKindStructField:
-		return "DeclKindStructField"
+		return "field"
 	case DeclKindMap:
-		return "DeclKindMap"
+		return "map"
 	case DeclKindInterface:
-		return "DeclKindInterface"
+		return "interface"
 	case DeclKindMethod:
-		return "DeclKindMethod"
+		return "method"
 	case DeclKindMethodArg:
-		return "DeclKindMethodArg"
+		return "argument"
 	}
 	panic(fmt.Errorf("bad DeclKind value == %d", int(d)))
 }
@@ -230,10 +229,6 @@ type ArrayDecl struct {
 // array, or vector, type.
 func NewArrayDecl(pkg *Package, obj types.Object, elType types.Type, size int64) *ArrayDecl {
 	return &ArrayDecl{sizedDecl{decl{pkg, obj, DeclKindArray}, size}, elType}
-}
-
-func (a *ArrayDecl) asArray() *types.Array {
-	return a.obj.Type().Underlying().(*types.Array)
 }
 
 // Length returns the number of elements in the receiver.
@@ -443,23 +438,4 @@ type Enum struct {
 	Type        *TypedefDecl
 	Enumerators []*ConstDecl
 	IsDense     bool
-}
-
-func enumIsDense(enumerators []*ConstDecl) bool {
-	sz := len(enumerators)
-	if sz < 2 {
-		return true
-	}
-	values := make([]int, sz)
-	for i := range enumerators {
-		n, _ := constant.Int64Val(enumerators[i].Value())
-		values[i] = int(n)
-	}
-	sort.Ints(values)
-	for i := 1; i < len(values); i++ {
-		if values[i]-values[i-1] != 1 {
-			return false
-		}
-	}
-	return true
 }

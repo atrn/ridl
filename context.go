@@ -9,7 +9,9 @@ package main
 
 import (
 	"fmt"
+	"go/constant"
 	"go/types"
+	"sort"
 	"strings"
 	"time"
 )
@@ -36,8 +38,6 @@ type Context struct {
 	Username string
 	// The name of the host where processing is running.
 	Hostname string
-	// All decls in order
-	Decls []Decl
 	// The basic alias types, "typedefs", "type <ident> <type>"...
 	Typedefs []*TypedefDecl
 	// The array and slice types.
@@ -66,7 +66,6 @@ func NewContext(directory string, filenames []string, pkg *Package) *Context {
 		BuildTime:   time.Now(),
 		Username:    MustGetUsername(),
 		Hostname:    MustGetHostname(),
-		Decls:       pkg.Decls,
 		Typedefs:    make([]*TypedefDecl, 0),
 		ArrayTypes:  make([]*ArrayDecl, 0),
 		MapTypes:    make([]*MapDecl, 0),
@@ -119,4 +118,23 @@ func (c *Context) findEnums() {
 		e := &Enum{typedef, constants, enumIsDense(constants)}
 		c.Enums = append(c.Enums, e)
 	}
+}
+
+func enumIsDense(enumerators []*ConstDecl) bool {
+	sz := len(enumerators)
+	if sz < 2 {
+		return true
+	}
+	values := make([]int, sz)
+	for i := range enumerators {
+		n, _ := constant.Int64Val(enumerators[i].Value())
+		values[i] = int(n)
+	}
+	sort.Ints(values)
+	for i := 1; i < len(values); i++ {
+		if values[i]-values[i-1] != 1 {
+			return false
+		}
+	}
+	return true
 }
