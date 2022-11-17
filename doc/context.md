@@ -27,10 +27,9 @@
 | Variable | Type           | Description                                  |
 |:---------|:---------------|:---------------------------------------------|
 | Name     | string         | The declarations's identifier.               |
-| Typename | string         | The name of the declaration's type.          |
+| TypeName | string         | The name of the declaration's type.          |
 | Kind     | DeclKind       | The kind of declaration (see below).         |
 | Position | token.Position | The source of the declaration.               |
-| Size     | integer        | The size, in bytes, of the declared _thing_. |
 
 ### DeclKind
 
@@ -46,7 +45,7 @@
 | method    | An interface method (function)       |
 | argument  | An argument to or result of a method |
 
-### Predicates
+### Delcaration Predicates
 
 | Predicate     | Description                                                  |
 |:--------------|:-------------------------------------------------------------|
@@ -73,7 +72,7 @@
 
 | Variable | Type   | Description                                                             |
 |:---------|:-------|:------------------------------------------------------------------------|
-| Typename | string | The name of the underlying type                                         |
+| TypeName | string | The name of the underlying type                                         |
 | IsEnum   | bool   | True of the type is used as the underlying type for enum-like constants |
 
 
@@ -82,8 +81,8 @@
 | Variable         | Type   | Description                                             |
 |:-----------------|:-------|:--------------------------------------------------------|
 | Length           | int    | Number of elements in the array or 0 if variably sized. |
-| ElTypename       | string | Name of the element type.                               |
-| Typename         | string | Go representation of the array type.                    |
+| ElTypeName       | string | Name of the element type.                               |
+| TypeName         | string | Go representation of the array type.                    |
 | IsVariableLength | bool   | True if the array has variable size.                    |
 | IsFixedLength    | bool   | True if the array has a fixed size.                     |
 
@@ -91,18 +90,18 @@
 
 | Variable         | Type   | Description                                             |
 |:-----------------|:-------|:--------------------------------------------------------|
-| Typename | string | Name of the type |
+| TypeName | string | Name of the type |
 
 ## StructField
 
-| Variable  | Type             | Description                       |
-|:----------|:-----------------|:----------------------------------|
-| Name      | string           | Name of the field                 |
-| Offset    | int              | Offset, in bytes, of the field    |
-| Alignment | int              | ALignment, in bytes, of the field |
-| Tag       | []StructFieldTag | Tags associated with the field    |
+| Variable  | Type   | Description                       |
+|:----------|:-------|:----------------------------------|
+| Name      | string | Name of the field                 |
+| Offset    | int    | Offset, in bytes, of the field    |
+| Alignment | int    | ALignment, in bytes, of the field |
+| Tags      | []Tag  | Tags associated with the field    |
 
-### StructFieldTag
+### Tag
 
 | Variable | Type   | Description              |
 |:---------|:-------|:-------------------------|
@@ -111,10 +110,10 @@
 
 ### MapDecl
 
-| Variable | Type   | Description              |
-|:---------|:-------|:-------------------------|
-| KeyTypename | string ||
-| Typename | string ||
+| Variable | Type       | Description                      |
+|:---------|:-----------|:---------------------------------|
+| Key      | types.Type | The type of the map's key values |
+| Value    | types.Type | The type of the map's values     |
 
 ### InterfaceDecl
 
@@ -126,7 +125,7 @@
 
 | Variable | Type            | Description |
 |:---------|:----------------|:------------|
-| Typename | string          |             |
+| TypeName | string          |             |
 | Args     | []MethodArgDecl |             |
 | Results  | []MethodArgDecl |             |
 
@@ -138,3 +137,6 @@
 | Type        | TypedefDecl | Type of enumerators.                           |
 | Enumerators | []ConstDecl | The enumerators                                |
 | IsDense     | bool        | True if the enumerator values form a dense set |
+
+
+## Template Functions

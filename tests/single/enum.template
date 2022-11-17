@@ -1,6 +1,6 @@
 {{range .Enums}}
 .Type.Name     {{.Type.Name}}
-.Type.Typename {{.Type.Typename}}
+.Type.TypeName {{.Type.TypeName}}
 .Type.Position {{.Type.Position}}
 .IsDense       {{.IsDense}}
 {{len .Enumerators}} .Enumerators

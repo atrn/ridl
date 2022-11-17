@@ -1,8 +1,8 @@
-{{range .Constants}}
+{{range .MapTypes}}
 .Kind       {{.Kind}}
 .Position   {{.Position}}
 .Name       {{.Name}}
 .TypeName   {{.TypeName}}
+.Key        {{.Key}}
 .Value      {{.Value}}
-.ExactValue {{.ExactValue}}
 {{end}}

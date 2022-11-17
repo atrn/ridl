@@ -2,9 +2,9 @@
 .Kind       {{.Kind}}
 .Position   {{.Position}}
 .Name       {{.Name}}
-.Typename   {{.Typename}}
+.TypeName   {{.TypeName}}
 .Length     {{.Length}}
-.ElTypename {{.ElTypename}}
+.ElTypeName {{.ElTypeName}}
 .IsVariableLength       {{.IsVariableLength}}
 .IsFixedLength  {{.IsFixedLength}}
 {{end}}

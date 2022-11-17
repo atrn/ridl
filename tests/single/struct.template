@@ -2,13 +2,13 @@
 .Kind       {{.Kind}}
 .Position   {{.Position}}
 .Name       {{.Name}}
-.Typename   {{.Typename}}
+.TypeName   {{.TypeName}}
 
 {{len .Fields}} Fields:
 {{range .Fields}}
     Offset: {{.Offset}}
-    Size:   {{.Size}}
+    Size:   {{sizeof .Object.Type}}
     Name:   {{.Name}}
-    Type:   {{.Typename}}
+    Type:   {{.TypeName}}
 {{end}}
 {{end}}

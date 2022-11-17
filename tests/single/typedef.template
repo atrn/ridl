@@ -2,6 +2,7 @@
 .Kind       {{.Kind}}
 .Position   {{.Position}}
 .Name       {{.Name}}
-.Typename   {{.Typename}}
+.TypeName   {{.TypeName}}
 .IsEnum     {{.IsEnum}}
+sizeof      {{sizeof .Object.Type}}
 {{end}}

@@ -1,7 +1,7 @@
 // -*- mode:go-template -*-
 
 {{range .Enums }}
-enum class {{.Type.Name}} : {{.Type.Typename}}
+enum class {{.Type.Name}} : {{.Type.TypeName}}
 {
 {{- if .IsDense}}
 {{- range .Enumerators}}
@@ -16,5 +16,5 @@ enum class {{.Type.Name}} : {{.Type.Typename}}
 {{end}}
 
 {{range .NotEnums}}
-const {{.Typename}} {{.Name}} = {{.Value}};
+const {{.TypeName}} {{.Name}} = {{.Value}};
 {{end}}

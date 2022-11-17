@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"go/types"
 	"io"
 	"log"
 	"path/filepath"
@@ -199,6 +200,10 @@ func divide(a, b int) int {
 	return a / b
 }
 
+func sizeof(t types.Type) int64 {
+	return Sizer.Sizeof(t)
+}
+
 var cppTemplateFuncs = map[string]interface{}{
 	"argtype":  argType,
 	"basename": basename,
@@ -213,4 +218,5 @@ var cppTemplateFuncs = map[string]interface{}{
 	"restype":  resType,
 	"tolower":  tolower,
 	"decap":    decap,
+	"sizeof":   sizeof,
 }

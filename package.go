@@ -7,7 +7,7 @@ import (
 	"sort"
 )
 
-var sizer = types.SizesFor("gc", "amd64")
+var Sizer = types.SizesFor("gc", "amd64")
 
 // The Package type represents a single package, a named collection of
 // declarations, constants, types, and associated imported packages.
@@ -78,30 +78,29 @@ func (p *Package) Import(path string) {
 func (p *Package) Map(obj types.Object, mapType *types.Map) {
 	keyType := mapType.Key()
 	valType := mapType.Elem()
-	p.Declare(NewMapDecl(p, obj, keyType.(types.Object), valType.(types.Object)))
+	p.Declare(NewMapDecl(p, obj, keyType, valType))
 }
 
 // Slice adds a slice declaration to the receiver.
 func (p *Package) Slice(obj types.Object, sliceType *types.Slice) {
 	elType := sliceType.Elem()
-	p.Declare(NewArrayDecl(p, obj, elType, sizer.Sizeof(sliceType.Elem())))
+	p.Declare(NewArrayDecl(p, obj, elType))
 }
 
 // Array adds an array declaration to the receiver.
 func (p *Package) Array(obj types.Object, arrayType *types.Array) {
 	elType := arrayType.Elem().Underlying()
-	size := sizer.Sizeof(arrayType)
-	p.Declare(NewArrayDecl(p, obj, elType, size))
+	p.Declare(NewArrayDecl(p, obj, elType))
 }
 
 // Struct adds a struct declaration to the receiver.
 func (p *Package) Struct(obj types.Object, structType *types.Struct) {
-	decl := NewStructDecl(p, obj, sizer.Sizeof(structType))
+	decl := NewStructDecl(p, obj)
 	fields := make([]*types.Var, structType.NumFields())
 	for i := 0; i < structType.NumFields(); i++ {
 		fields[i] = structType.Field(i)
 	}
-	offsets := sizer.Offsetsof(fields)
+	offsets := Sizer.Offsetsof(fields)
 	for i := 0; i < structType.NumFields(); i++ {
 		field := fields[i]
 		if field.Anonymous() {
@@ -109,7 +108,7 @@ func (p *Package) Struct(obj types.Object, structType *types.Struct) {
 			continue
 		}
 		fieldType := field.Type()
-		f := NewStructField(p, field, sizer.Sizeof(fieldType), offsets[i], sizer.Alignof(fieldType)) // XXX check pos
+		f := NewStructField(p, field, offsets[i], Sizer.Alignof(fieldType)) // XXX check pos
 		decl.AddField(f)
 	}
 	p.Declare(decl)

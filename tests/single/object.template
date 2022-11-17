@@ -1,0 +1,20 @@
+{{range .Decls}}
+.Object.Name            {{.Object.Name}}
+.Object.Type            {{.Object.Type}}
+.Object.Exported        {{.Object.Exported}}
+.Object.Id              {{.Object.Id}}
+.Object.String          {{.Object.String}}
+.Object.Type.Underlying {{.Object.Type.Underlying}}
+
+.Name                   {{.Name}}
+.TypeName               {{.TypeName}}
+.Kind                   {{.Kind}}
+{{- if not .IsConst}}
+sizeof                  {{sizeof .Object.Type}}
+{{else}}
+.Value                  {{.Value}}
+.Value.Kind             {{.Value.Kind}}
+.IsUntyped              {{.IsUntyped}}
+{{- end}}
+
+{{end}}

@@ -105,7 +105,7 @@ func (c *Context) findEnums() {
 	}
 	m := make(map[*TypedefDecl][]*ConstDecl)
 	for _, constant := range c.Constants {
-		t, found := typedefs[constant.Typename()]
+		t, found := typedefs[constant.TypeName()]
 		if found {
 			m[t] = append(m[t], constant)
 			t.IsEnum = true

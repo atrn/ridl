@@ -29,7 +29,7 @@
 |:----- |:----- |:---- |:---- |:-------|
 {{- if len .Decls}}
 {{range .Decls -}}
-| {{.Name}} | `{{.Typename}}` | {{.Position.Filename}} | {{.Position.Line}} | {{.Position.Column}} |
+| {{.Name}} | `{{.TypeName}}` | {{.Position.Filename}} | {{.Position.Line}} | {{.Position.Column}} |
 {{end}}
 {{else}}
 | None ||
@@ -40,7 +40,7 @@
 |:--|:--|:--|
 {{- if len .Typedefs}}
 {{range .Typedefs -}}
-| {{.Name}} | {{.Typename}}
+| {{.Name}} | {{.TypeName}}
 {{end}}
 {{else}}
 | None |||
@@ -51,7 +51,7 @@
 | :--- | :--- | :----- | :------- |
 {{- if len .ArrayTypes}}
 {{range .ArrayTypes -}}
-| {{.Name}} | {{.Typename}} | {{.Length}} | {{.Size}} |
+| {{.Name}} | {{.TypeName}} | {{.Length}} | {{sizeof .Object.Type}} |
 {{end}}
 {{else}}
 | None ||||
@@ -62,7 +62,7 @@
 {{range .StructTypes}}
 - `{{.Name}}`
 {{- range .Fields}}
-    - {{.Name}} {{.Typename}}
+    - {{.Name}} {{.TypeName}}
 {{- end}}
 {{end}}
 {{end}}
@@ -73,7 +73,7 @@
 {{range .Methods -}}
 - {{.Name}}
 {{range .Args}}
-    - '{{.Name}}' {{.Typename}}
+    - '{{.Name}}' {{.TypeName}}
 {{- end}}
 {{- end}}
 {{end}}
@@ -83,5 +83,5 @@
 | Name | Type | Value | Exact Value |
 | :--- | :--- | :--- | :---- |
 {{range .Constants -}}
-| {{.Name}} | {{.Typename}} | {{.Value}} | {{.ExactValue}} |
+| {{.Name}} | {{.TypeName}} | {{.Value}} | {{.ExactValue}} |
 {{end}}

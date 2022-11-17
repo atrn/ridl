@@ -48,7 +48,7 @@ const auto {{$interface}}_{{.Name}}_msgcode = make_msgcode(PackageID, {{$msgid}}
 {{- range .Methods}}
 struct {{$interface}}_{{.Name}}_Args {
 {{- range $index, $arg := .Args}}
-    {{restype $arg.Typename}} _{{$arg.Name}};
+    {{restype $arg.TypeName}} _{{$arg.Name}};
 {{- end}}
 };
 

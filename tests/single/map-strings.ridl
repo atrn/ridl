@@ -1,0 +1,7 @@
+// -*- mode:go -*-
+
+package ridl_tests
+
+type KeyValuePair map[string]string
+
+type HashTable map[uint64]KeyValuePair

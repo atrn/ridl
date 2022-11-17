@@ -17,17 +17,17 @@ namespace {{.PackageName}}
 
 // Typedefs
 {{range .Typedefs -}}
-typedef {{.Typename}} {{.Name}};
+typedef {{.TypeName}} {{.Name}};
 {{- end}}
 
 // Constants
 {{range .Constants}}
-const {{cpptype .Typename}} {{.Name}} = {{.Value}};
+const {{cpptype .TypeName}} {{.Name}} = {{.Value}};
 {{- end}}
 
 // Array Types
 {{range .ArrayTypes}}
-{{if eq .Length 0}}typedef std::vector<{{.Typename}}> {{.Name}};{{else}}typedef std::array<{{.Typename}}, {{.Length}}> {{.Name}};{{end}}
+{{if eq .Length 0}}typedef std::vector<{{.TypeName}}> {{.Name}};{{else}}typedef std::array<{{.TypeName}}, {{.Length}}> {{.Name}};{{end}}
 {{- end}}
 
 // Structs
@@ -38,7 +38,7 @@ const {{cpptype .Typename}} {{.Name}} = {{.Value}};
 struct {{.Name}}
 {
     {{range .Fields}}
-    {{cpptype .Typename}} _ {{.Name}} ;
+    {{cpptype .TypeName}} _ {{.Name}} ;
     {{end}}
 };
 {{end}}
@@ -50,9 +50,9 @@ struct {{.Name}}_Result
 {
       {{range $index, $arg := .Results}}
         {{if $arg.Name}}
-    {{cpptype $arg.Typename}} _{{$arg.Name}};
+    {{cpptype $arg.TypeName}} _{{$arg.Name}};
         {{else}}
-    {{cpptype $arg.Typename}} _r$index}};
+    {{cpptype $arg.TypeName}} _r$index}};
         {{end}}
       {{- end}}
     {{- end}}
