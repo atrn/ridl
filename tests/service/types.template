@@ -8,10 +8,16 @@ namespace {{.PackageName}}
 {
 
 {{range .Enums -}}
-enum class {{.Typedef.Name}} : {{.Typedef.Alias}}
+enum class {{.Type.Name}} : {{.Type.TypeName}}
 {
-{{- range .Constants}}
+{{if .IsDense}}
+{{- range .Enumerators}}
+    {{.Name}},
+{{- end}}
+{{else}}
+{{- range .Enumerators}}
     {{.Name}} = {{.Value}},
+{{- end}}
 {{- end}}
 };
 {{end}}
@@ -19,70 +25,74 @@ enum class {{.Typedef.Name}} : {{.Typedef.Alias}}
 {{range .Decls -}}
     {{- if .IsConst -}}
         {{- if not .IsEnumerator}}
-        const {{cpptype .Type}} {{.Name}} = {{.Value}};
+        const {{cpptype .Object.Type.String}} {{.Name}} = {{.Value}};
         {{end}}
     {{- else if .IsTypedef -}}
         {{- if not .IsEnum}}
-        using {{.Name}} = {{cpptype .Alias}};
+        using {{.Name}} = {{cpptype .TypeName}};
         {{- end}}
     {{- else if .IsArray -}}
         {{if .IsVariableLength}}
         using {{.Name}} = std::vector<{{cpptype .Type}}>;
         {{else}}
-        using {{.Name}} = std::array<{{cpptype .ElemType}}, {{.Length}}>;
+        using {{.Name}} = std::array<{{cpptype .ElTypeName}}, {{.Length}}>;
         {{end}}
     {{- else if .IsStruct -}}
         struct {{.Name}}
         {
-        {{- range .Fields}}
-            {{cpptype .Type}} _{{decap .Name}};
-        {{- end}}
+        {{- range .Fields -}}
+            {{- cpptype .TypeName}} _{{decap .Name}};
+        {{- end -}}
         };
     {{- else if .IsMap -}}
         map {{.Name}}
     {{- else if .IsInterface -}}
         {{$interface := .Name}}
 
+        class {{.Name}}
+        {
+        public:
         {{range .Methods}}
             {{- if .Results -}}
                 {{- $n := len .Results}}
                 {{if gt $n 1}}
-                struct {{$interface}}_{{.Name}}_Result
+                struct {{.Name}}Result
                 {
-                {{range .Results}}
-                    {{cpptype .Type}} _{{decap .Name}};
-                {{end}}
+                {{- range .Results}}
+                    {{cpptype .TypeName}} _{{decap .Name}};
+                {{- end}}
                 };
                 {{end}}
             {{end}}
         {{end}}
-        class {{.Name}}
-        {
         public:
             virtual ~{{.Name}}() = default;
-        {{range .Methods}}
+        {{- range .Methods}}
             virtual
             {{- if .Results -}}
                 {{- $n := len .Results}}
-                {{if eq $n 1}}{{$val := index .Results 0}}{{restype $val.Type}}{{else}}{{$interface}}_{{.Name}}_Result{{end -}}
+                {{if eq $n 1}}{{$val := index .Results 0}}{{restype $val.Type}}{{else}}{{.Name}}Result{{end -}}
             {{else}}
                void
             {{- end}}
-            {{.Name}}(
-            {{- range $index, $arg := .Args}}
-            {{if eq $index 0}}{{else}}, {{end}}
-            {{if $arg.IsStruct}}
-            const {{argtype $arg.Type}} & {{$arg.Name}}
-            {{else}}
-            {{argtype $arg.Type}} {{$arg.Name}}
-            {{end}}
-            {{end}}
+            {{.Name}}
+            (
+            {{- range $index, $arg := .Args -}}
+            {{- if eq $index 0}}{{else}}, {{end -}}
+            {{$argsize := sizeof $arg.Object.Type}}
+            {{- if gt $argsize 32}}
+            const {{$arg.TypeName}} & {{$arg.Name}}
+            {{- else -}}
+            {{argtype $arg.TypeName}} {{$arg.Name}}
+            {{- end -}}
+
+            {{- end -}}
             ) = 0;
         {{- end}}
         };
     {{- else -}}
        something else {{.Name}}
     {{- end}}
-{{end -}}
+{{end}}
 
 } // namespace {{.PackageName}}

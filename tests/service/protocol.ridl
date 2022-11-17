@@ -1,6 +1,6 @@
 // -*- mode:go -*-
 
-package a_system
+package ImageServer
 
 const PackageID uint16 = 0xca5e
 
