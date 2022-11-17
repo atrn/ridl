@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go/token"
 	"go/types"
 	"sort"
@@ -35,25 +34,22 @@ func NewPackage(pkg *types.Package, fset *token.FileSet) *Package {
 		p.Import(imported.Path())
 	}
 
-	for _, obj := range objectsInDeclarationOrder(pkg) {
-		switch obj.(type) {
+	scope := pkg.Scope()
+	names := scope.Names()
+	objects := make([]types.Object, 0, len(names))
+	for _, name := range names {
+		objects = append(objects, scope.Lookup(name))
+	}
+	sort.Slice(objects, func(i, j int) bool {
+		return objects[i].Pos() < objects[j].Pos()
+	})
+
+	for _, obj := range objects {
+		switch t := obj.(type) {
 		case *types.Const:
 			p.Declare(NewConstDecl(p, obj))
 		case *types.TypeName:
-			switch t := obj.Type().Underlying().(type) {
-			case *types.Array:
-				p.Array(obj, t)
-			case *types.Basic:
-				p.Declare(NewTypedefDecl(p, obj, t))
-			case *types.Interface:
-				p.Interface(obj, t)
-			case *types.Struct:
-				p.Struct(obj, t)
-			case *types.Slice:
-				p.Slice(obj, t)
-			case *types.Map:
-				p.Map(obj, t)
-			}
+			p.Declare(makeDecl(p, t))
 		}
 	}
 
@@ -74,87 +70,7 @@ func (p *Package) Import(path string) {
 	}
 }
 
-// Map adds a map declaration to the reciever.
-func (p *Package) Map(obj types.Object, mapType *types.Map) {
-	keyType := mapType.Key()
-	valType := mapType.Elem()
-	p.Declare(NewMapDecl(p, obj, keyType, valType))
-}
-
-// Slice adds a slice declaration to the receiver.
-func (p *Package) Slice(obj types.Object, sliceType *types.Slice) {
-	elType := sliceType.Elem()
-	p.Declare(NewArrayDecl(p, obj, elType))
-}
-
-// Array adds an array declaration to the receiver.
-func (p *Package) Array(obj types.Object, arrayType *types.Array) {
-	elType := arrayType.Elem().Underlying()
-	p.Declare(NewArrayDecl(p, obj, elType))
-}
-
-// Struct adds a struct declaration to the receiver.
-func (p *Package) Struct(obj types.Object, structType *types.Struct) {
-	decl := NewStructDecl(p, obj)
-	fields := make([]*types.Var, structType.NumFields())
-	for i := 0; i < structType.NumFields(); i++ {
-		fields[i] = structType.Field(i)
-	}
-	offsets := Sizer.Offsetsof(fields)
-	for i := 0; i < structType.NumFields(); i++ {
-		field := fields[i]
-		if field.Anonymous() {
-			// TODO: allow embedding
-			continue
-		}
-		fieldType := field.Type()
-		f := NewStructField(p, field, offsets[i], Sizer.Alignof(fieldType)) // XXX check pos
-		decl.AddField(f)
-	}
-	p.Declare(decl)
-}
-
-func makeMethodArgs(pkg *Package, obj types.Object, args *types.Tuple, prefix string) []*MethodArg {
-	ma := make([]*MethodArg, 0)
-	for i := 0; i < args.Len(); i++ {
-		arg := args.At(i)
-		name := arg.Name()
-		if name == "" {
-			name = fmt.Sprintf("%s%d", prefix, i+1)
-		}
-		ma = append(ma, NewMethodArg(pkg, arg, name))
-	}
-	return ma
-}
-
-// Interface adds an interface declaration to the receiver.
-func (p *Package) Interface(obj types.Object, interfaceType *types.Interface) {
-	xi := NewInterfaceDecl(p, obj)
-	for i := 0; i < interfaceType.NumMethods(); i++ {
-		fn := interfaceType.Method(i)
-		sig := fn.Type().(*types.Signature)
-		args := makeMethodArgs(p, fn, sig.Params(), "arg")
-		results := makeMethodArgs(p, fn, sig.Results(), "res")
-		xm := NewMethod(p, fn, args, results)
-		xi.Declare(xm)
-	}
-	p.Declare(xi)
-}
-
 // Position returns the token.Position given a declaration's token.Pos
 func (p *Package) Position(pos token.Pos) token.Position {
 	return p.fset.Position(pos)
-}
-
-func objectsInDeclarationOrder(pkg *types.Package) []types.Object {
-	scope := pkg.Scope()
-	names := scope.Names()
-	objects := make([]types.Object, 0, len(names))
-	for _, name := range names {
-		objects = append(objects, scope.Lookup(name))
-	}
-	sort.Slice(objects, func(i, j int) bool {
-		return objects[i].Pos() < objects[j].Pos()
-	})
-	return objects
 }

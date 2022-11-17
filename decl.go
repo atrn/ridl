@@ -384,7 +384,7 @@ func (decl *InterfaceDecl) TypeName() string {
 }
 
 // Declare appends a method declaration to the interface.
-func (decl *InterfaceDecl) Declare(method *MethodDecl) {
+func (decl *InterfaceDecl) addMethod(method *MethodDecl) {
 	decl.Methods = append(decl.Methods, method)
 }
 
@@ -447,4 +447,70 @@ type Enum struct {
 	Type        *TypedefDecl
 	Enumerators []*ConstDecl
 	IsDense     bool
+}
+
+//  ================================================================
+
+func makeDecl(pkg *Package, obj *types.TypeName) Decl {
+	switch t := obj.Type().Underlying().(type) {
+	case *types.Array:
+		return NewArrayDecl(pkg, obj, t.Elem().Underlying())
+	case *types.Basic:
+		return NewTypedefDecl(pkg, obj, t)
+	case *types.Interface:
+		return makeInterface(pkg, obj, t)
+	case *types.Struct:
+		return makeStruct(pkg, obj, t)
+	case *types.Slice:
+		return NewArrayDecl(pkg, obj, t.Elem().Underlying())
+	case *types.Map:
+		return NewMapDecl(pkg, obj, t.Key(), t.Elem())
+	default:
+		panic(fmt.Errorf("%T: not handling in makeDecl", t))
+	}
+}
+
+func makeStruct(pkg *Package, obj types.Object, structType *types.Struct) Decl {
+	decl := NewStructDecl(pkg, obj)
+	fields := make([]*types.Var, structType.NumFields())
+	for i := 0; i < structType.NumFields(); i++ {
+		fields[i] = structType.Field(i)
+	}
+	offsets := Sizer.Offsetsof(fields)
+	for i := 0; i < structType.NumFields(); i++ {
+		field := fields[i]
+		if field.Anonymous() {
+			// TODO: allow embedding
+			continue
+		}
+		fieldType := field.Type()
+		f := NewStructField(pkg, field, offsets[i], Sizer.Alignof(fieldType)) // XXX check pos
+		decl.AddField(f)
+	}
+	return decl
+}
+
+func makeInterface(pkg *Package, obj types.Object, interfaceType *types.Interface) Decl {
+	intf := NewInterfaceDecl(pkg, obj)
+	for i := 0; i < interfaceType.NumMethods(); i++ {
+		method := interfaceType.Method(i)
+		signature := method.Type().(*types.Signature)
+		args := makeArgs(pkg, method, signature.Params(), "arg")
+		results := makeArgs(pkg, method, signature.Results(), "res")
+		intf.addMethod(NewMethod(pkg, method, args, results))
+	}
+	return intf
+}
+
+func makeArgs(pkg *Package, obj types.Object, args *types.Tuple, prefix string) []*MethodArg {
+	methodArgs := make([]*MethodArg, 0)
+	for i := 0; i < args.Len(); i++ {
+		arg := args.At(i)
+		name := arg.Name()
+		if name == "" {
+			name = fmt.Sprintf("%s%d", prefix, i+1)
+		}
+		methodArgs = append(methodArgs, NewMethodArg(pkg, arg, name))
+	}
+	return methodArgs
 }
