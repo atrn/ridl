@@ -131,6 +131,9 @@ func enumIsDense(enumerators []*ConstDecl) bool {
 		values[i] = int(n)
 	}
 	sort.Ints(values)
+	if values[0] != 0 {
+		return false
+	}
 	for i := 1; i < len(values); i++ {
 		if values[i]-values[i-1] != 1 {
 			return false
