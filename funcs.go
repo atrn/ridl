@@ -204,19 +204,29 @@ func sizeof(t types.Type) int64 {
 	return Sizer.Sizeof(t)
 }
 
+func trimprefix(s, p string) string {
+	return strings.TrimPrefix(s, p)
+}
+
+func trimsuffix(s, f string) string {
+	return strings.TrimSuffix(s, f)
+}
+
 var cppTemplateFuncs = map[string]interface{}{
-	"argtype":  argType,
-	"basename": basename,
-	"cpptype":  cppType,
-	"dims":     dims,
-	"eltype":   eltype,
-	"isslice":  isslice,
-	"add":      add,
-	"subtract": subtract,
-	"multiply": multiply,
-	"divide":   divide,
-	"restype":  resType,
-	"tolower":  tolower,
-	"decap":    decap,
-	"sizeof":   sizeof,
+	"argtype":    argType,
+	"basename":   basename,
+	"cpptype":    cppType,
+	"dims":       dims,
+	"eltype":     eltype,
+	"isslice":    isslice,
+	"add":        add,
+	"subtract":   subtract,
+	"multiply":   multiply,
+	"divide":     divide,
+	"restype":    resType,
+	"tolower":    tolower,
+	"decap":      decap,
+	"sizeof":     sizeof,
+	"trimprefix": trimprefix,
+	"trimsuffix": trimsuffix,
 }
