@@ -81,7 +81,11 @@ struct {{.Name}}
 // Arrays
 
 {{- range .ArrayTypes}}
-using {{.Name}} = {{if .IsVariableLength}}std::vector<{{cpptype .ElTypeName}}>{{else}}std::array<{{cpptype .ElTypeName}}, {{.Length}}>{{end}};
+{{- if .IsVariableLength}}
+using {{.Name}} = std::vector<{{cpptype .ElTypeName}}>;
+{{else}}
+using {{.Name}} = std::array<{{cpptype .ElTypeName}}, {{.Length}}>;
+{{- end}}
 {{- end}}
 {{- end}}
 

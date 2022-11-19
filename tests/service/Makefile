@@ -6,11 +6,11 @@ clang_format?=	clang-format --style=file:../.clang-format -i
 test: types.hpp messages.hpp
 	dmake
 
-types.hpp : protocol.ridl $(template1)
+types.hpp : protocol.ridl $(template1) $(ridl)
 	$(ridl) -t $(template1) -o $@ protocol.ridl
 	$(clang_format) $@
 
-messages.hpp : protocol.ridl $(template2)
+messages.hpp : protocol.ridl $(template2) $(ridl)
 	$(ridl) -t $(template2) -o $@ protocol.ridl
 	$(clang_format) $@
 

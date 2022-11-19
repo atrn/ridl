@@ -14,74 +14,110 @@
 | Host | {{.Hostname}} |
 | RidlVersion | {{.RidlVersion}} |
 
-## Imports
 {{if len .Imports}}
+## Imports
+
 {{- range .Imports}}
 - {{.}}
 {{end}}
-{{- else}}
-- None
 {{- end}}
 
 ## Declarations
 
+{{- if len .Decls}}
 | Name  | Type  | File | Line | Column |
 |:----- |:----- |:---- |:---- |:-------|
-{{- if len .Decls}}
 {{range .Decls -}}
-| {{.Name}} | `{{.TypeName}}` | {{.Position.Filename}} | {{.Position.Line}} | {{.Position.Column}} |
+| `{{.Name}}` | {{.TypeName}} | {{.Position.Filename}} | {{.Position.Line}} | {{.Position.Column}} |
 {{end}}
 {{else}}
-| None ||
+- None
 {{end}}
 
-## Typedefs
-| Name | Type
-|:--|:--|:--|
-{{- if len .Typedefs}}
-{{range .Typedefs -}}
-| {{.Name}} | {{.TypeName}}
-{{end}}
-{{else}}
-| None |||
-{{end}}
-
-## Array Types
-| Name | Type | Length | Size(of) |
-| :--- | :--- | :----- | :------- |
-{{- if len .ArrayTypes}}
-{{range .ArrayTypes -}}
-| {{.Name}} | {{.TypeName}} | {{.Length}} | {{sizeof .Object.Type}} |
-{{end}}
-{{else}}
-| None ||||
-{{end}}
-
-## Struct Types
-{{if len .StructTypes -}}
-{{range .StructTypes}}
-- `{{.Name}}`
-{{- range .Fields}}
-    - {{.Name}} {{.TypeName}}
-{{- end}}
-{{end}}
-{{end}}
-
-## Interfaces
-{{range .Interfaces -}}
-### `{{.Name}}`
-{{range .Methods -}}
-- {{.Name}}
-{{range .Args}}
-    - '{{.Name}}' {{.TypeName}}
-{{- end}}
-{{- end}}
-{{end}}
-
+{{if len .Constants}}
 ## Constants:
 
-| Name | Type | Value | Exact Value |
+| Name | Type | Value |
 | :--- | :--- | :--- | :---- |
 {{range .Constants -}}
-| {{.Name}} | {{.TypeName}} | {{.Value}} | {{.ExactValue}} |
+| `{{.Name}}` | {{.TypeName}} | {{.Value}} |
+{{end}}
+{{end}}
+
+{{- if len .Typedefs}}
+## Typedefs
+
+| Name | Type
+|:--|:--|:--|
+{{range .Typedefs -}}
+| `{{.Name}}` | {{.TypeName}}
+{{end}}
+{{end}}
+
+{{- if len .ArrayTypes}}
+## Array Types
+
+| Name | Type | Length | Size |
+| :--- | :--- | :----- | :------- |
+{{range .ArrayTypes -}}
+| `{{.Name}}` | {{.TypeName}} | {{.Length}} | {{sizeof .Object.Type}} |
+{{end}}
+{{end}}
+
+{{if len .StructTypes -}}
+## Struct Types
+
+{{range .StructTypes}}
+### `{{.Name}}`
+{{if len .Fields}}
+| Field # | Name | Type | Size |
+| :- | :---- | :---- | :---- |
+{{- range $index, $field := .Fields}}
+| {{add $index 1}} | `{{$field.Name}}` | {{$field.TypeName}} | {{sizeof $field.Object.Type}} |
+{{- end}}
+{{else}}
+_Empty structure._
+{{end}}
+{{end}}
+{{end}}
+
+{{if len .Interfaces}}
+## Interfaces
+{{range .Interfaces -}}
+
+### `{{.Name}}`
+
+| Method | # Arguments | # Results |
+| :----- | :---------- | :-------- |
+{{- range .Methods}}
+| `{{.Name}}` | {{len .Args}} | {{len .Results}} |
+{{- end}}
+
+{{$interface := .Name}}
+{{range .Methods -}}
+#### `{{$interface}} :: {{.Name}}`
+{{if .Args}}
+| Argument | Type |
+| :------- | :---- |
+{{- range .Args}}
+| `{{.Name}}` | {{.TypeName}} |
+{{- end}}
+{{else}}
+_None_
+{{end}}
+
+{{if .Results}}
+<br>
+
+| Result | Type |
+| :------- | :---- |
+{{- range .Results}}
+| `{{.Name}}` | {{.TypeName}} |
+{{- end}}
+{{else}}
+_None_
+{{end}}
+
+{{- end}}
+{{end}}
 {{end}}

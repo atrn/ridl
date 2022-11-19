@@ -12,6 +12,7 @@ import (
 	"go/constant"
 	"go/token"
 	"go/types"
+	"sort"
 	"strings"
 )
 
@@ -207,14 +208,15 @@ func (decl *TypedefDecl) TypeName() string {
 // being interpreted as an unbounded array).
 type ArrayDecl struct {
 	decl
-	elType types.Type
+	elTypename string
+	elType     types.Type
 }
 
 // NewArrayDecl returns a new ArrayDecl with the supplied name,
 // element type and size. A size of 0 implies an unbounded
 // array, or vector, type.
-func NewArrayDecl(pkg *Package, obj types.Object, elType types.Type) *ArrayDecl {
-	return &ArrayDecl{decl{pkg, obj, DeclKindArray}, elType}
+func NewArrayDecl(pkg *Package, obj types.Object, typename string, elType types.Type) *ArrayDecl {
+	return &ArrayDecl{decl{pkg, obj, DeclKindArray}, typename, elType}
 }
 
 // Length returns the number of elements in the receiver.
@@ -230,15 +232,12 @@ func (a *ArrayDecl) Length() int {
 
 // ElTypeName returns the type of the elements of the array.
 func (a *ArrayDecl) ElTypeName() string {
-	return a.elType.String()
+	return a.elTypename
 }
 
 // TypeName returns the name of the receiver's type.
 func (a *ArrayDecl) TypeName() string {
-	if a.IsVariableLength() {
-		return fmt.Sprintf("[]%s", a.ElTypeName())
-	}
-	return fmt.Sprintf("[%d]%s", a.Length(), a.ElTypeName())
+	return a.ElTypeName()
 }
 
 func (a *ArrayDecl) IsVariableLength() bool {
@@ -454,7 +453,7 @@ type Enum struct {
 func makeDecl(pkg *Package, obj *types.TypeName) Decl {
 	switch t := obj.Type().Underlying().(type) {
 	case *types.Array:
-		return NewArrayDecl(pkg, obj, t.Elem().Underlying())
+		return NewArrayDecl(pkg, obj, getTypeName(t.Elem()), t.Elem().Underlying())
 	case *types.Basic:
 		return NewTypedefDecl(pkg, obj, t)
 	case *types.Interface:
@@ -462,11 +461,22 @@ func makeDecl(pkg *Package, obj *types.TypeName) Decl {
 	case *types.Struct:
 		return makeStruct(pkg, obj, t)
 	case *types.Slice:
-		return NewArrayDecl(pkg, obj, t.Elem().Underlying())
+		return NewArrayDecl(pkg, obj, getTypeName(t.Elem()), t.Elem().Underlying())
 	case *types.Map:
 		return NewMapDecl(pkg, obj, t.Key(), t.Elem())
 	default:
 		panic(fmt.Errorf("%T: not handling in makeDecl", t))
+	}
+}
+
+func getTypeName(t types.Type) string {
+	switch actual := t.(type) {
+	case *types.Basic:
+		return actual.Name()
+	case *types.Named:
+		return actual.Obj().Name()
+	default:
+		panic(fmt.Errorf("getTypeName: %T", t))
 	}
 }
 
@@ -492,8 +502,15 @@ func makeStruct(pkg *Package, obj types.Object, structType *types.Struct) Decl {
 
 func makeInterface(pkg *Package, obj types.Object, interfaceType *types.Interface) Decl {
 	intf := NewInterfaceDecl(pkg, obj)
+	methodsInOrder := make([]*types.Func, interfaceType.NumMethods())
 	for i := 0; i < interfaceType.NumMethods(); i++ {
-		method := interfaceType.Method(i)
+		methodsInOrder[i] = interfaceType.Method(i)
+	}
+	sort.Slice(methodsInOrder, func(i, j int) bool {
+		return methodsInOrder[i].Pos() < methodsInOrder[j].Pos()
+	})
+	for i := 0; i < interfaceType.NumMethods(); i++ {
+		method := methodsInOrder[i]
 		signature := method.Type().(*types.Signature)
 		args := makeArgs(pkg, method, signature.Params(), "arg")
 		results := makeArgs(pkg, method, signature.Results(), "res")

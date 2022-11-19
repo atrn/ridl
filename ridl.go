@@ -52,7 +52,7 @@ func parseFiles(filenames []string) (*Package, error) {
 	fset := token.NewFileSet()
 	files := make([]*ast.File, 0, len(filenames))
 	for _, filename := range filenames {
-		logdebug("parsing %q", filename)
+		logdebug("ParseFile %q", filename)
 		file, err := parser.ParseFile(fset, filename, nil, 0)
 		if err != nil {
 			return nil, fmt.Errorf("parse %q: %w", filename, err)
