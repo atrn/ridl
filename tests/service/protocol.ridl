@@ -31,9 +31,9 @@ type ImageID uint64
 type Service interface {
 	Noop()
 	Reset()
-	Hello(name string) (message string, err error)
-	Auth(token string, t Timestamp) (key string, err error)
-	GetServerTime(key string) (Timestamp, error)
-	PostImage(key string, image Image) (ImageID, error)
-	GetImage(key string, id ImageID) (Image, error)
+	Hello(clientName string) (serverMessage string, err error)
+	Authenticate(token string, t Timestamp) (accessKey string, err error)
+	GetServerTime(accessKey string) (serverTime Timestamp, err error)
+	PostImage(accessKey string, image Image) (imageID ImageID, err error)
+	GetImage(accessKey string, id ImageID) (image Image, err error)
 }

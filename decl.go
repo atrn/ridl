@@ -161,11 +161,12 @@ func (d *decl) IsMethodArg() bool {
 type ConstDecl struct {
 	decl
 	IsEnumerator bool
+	EnumType     Decl
 }
 
 // NewConstDecl returns a new ConstDecl with the given name, type and value.
 func NewConstDecl(pkg *Package, obj types.Object) *ConstDecl {
-	return &ConstDecl{decl{pkg, obj, DeclKindConst}, false}
+	return &ConstDecl{decl{pkg, obj, DeclKindConst}, false, nil}
 }
 
 func (decl *ConstDecl) Value() constant.Value {
@@ -282,24 +283,24 @@ func (decl *StructDecl) TypeName() string {
 type StructField struct {
 	decl
 	Tags      []Tag
-	offset    int64
-	alignment int64
+	offset    int
+	alignment int
 }
 
 // NewStructField returns a new StructField
 func NewStructField(pkg *Package, obj types.Object, offset, alignment int64) *StructField {
-	return &StructField{decl{pkg, obj, DeclKindStructField}, nil, offset, alignment}
+	return &StructField{decl{pkg, obj, DeclKindStructField}, nil, int(offset), int(alignment)}
 }
 
 func (sf *StructField) Name() string {
 	return sf.Object.Name()
 }
 
-func (sf *StructField) Offset() int64 {
+func (sf *StructField) Offset() int {
 	return sf.offset
 }
 
-func (sf *StructField) Alignment() int64 {
+func (sf *StructField) Alignment() int {
 	return sf.alignment
 }
 

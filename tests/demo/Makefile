@@ -1,6 +1,6 @@
 .PHONY: all test clean
 
-ridl		?=	../../ridl
+ridl?=		../../ridl
 templates=	../../templates
 clang_format?=	clang-format --style=file:../.clang-format -i
 
@@ -14,5 +14,4 @@ demo.hpp : demo.ridl $(templates)/c++-header.template $(ridl)
 	$(clang_format) demo.hpp
 
 clean:
-	dmake clean
-	rm -f *.cpp *.hpp
+	rm -rf *.cpp *.hpp .objs

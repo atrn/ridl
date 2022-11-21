@@ -1,6 +1,7 @@
 // ridl: -*- mode:go-template -*-
 
-# Package `{{.PackageName}}`
+{{$package := .PackageName}}
+# Package `{{$package}}`
 
 ## Meta Data
 
@@ -8,7 +9,7 @@
 | :--- | :--- |
 | Directory | {{.Directory}} |
 | Filenames | {{.Filenames}} |
-| PackageName | {{.PackageName}} |
+| PackageName | {{$package}} |
 | BuildTime | {{.BuildTime}} |
 | User | {{.Username}} |
 | Host | {{.Hostname}} |
@@ -31,26 +32,26 @@
 | `{{.Name}}` | {{.TypeName}} | {{.Position.Filename}} | {{.Position.Line}} | {{.Position.Column}} |
 {{end}}
 {{else}}
-- None
+_No declarations_
 {{end}}
 
 {{if len .Constants}}
 ## Constants:
 
-| Name | Type | Value |
-| :--- | :--- | :--- | :---- |
+| Name | Type | Value | Enumerator |
+| :--- | :--- | :--- | :---- | :-------- |
 {{range .Constants -}}
-| `{{.Name}}` | {{.TypeName}} | {{.Value}} |
+| `{{.Name}}` | {{.TypeName}} | {{.Value}} | {{.IsEnumerator}} |
 {{end}}
 {{end}}
 
 {{- if len .Typedefs}}
 ## Typedefs
 
-| Name | Type
-|:--|:--|:--|
+| Name | Type | Enumerated Type |
+|:--|:--|:--|:-----|
 {{range .Typedefs -}}
-| `{{.Name}}` | {{.TypeName}}
+| `{{.Name}}` | {{.TypeName}} | {{.IsEnum}} |
 {{end}}
 {{end}}
 
@@ -82,10 +83,9 @@ _Empty structure._
 {{end}}
 
 {{if len .Interfaces}}
-## Interfaces
 {{range .Interfaces -}}
 
-### `{{.Name}}`
+## Interface `{{$package}}`::`{{.Name}}`
 
 | Method | # Arguments | # Results |
 | :----- | :---------- | :-------- |
@@ -95,7 +95,7 @@ _Empty structure._
 
 {{$interface := .Name}}
 {{range .Methods -}}
-#### `{{$interface}} :: {{.Name}}`
+### `{{$package}}`::`{{$interface}}`::`{{.Name}}`
 {{if .Args}}
 | Argument | Type |
 | :------- | :---- |
@@ -103,11 +103,10 @@ _Empty structure._
 | `{{.Name}}` | {{.TypeName}} |
 {{- end}}
 {{else}}
-_None_
+_No Arguments_
 {{end}}
 
 {{if .Results}}
-<br>
 
 | Result | Type |
 | :------- | :---- |
@@ -115,7 +114,7 @@ _None_
 | `{{.Name}}` | {{.TypeName}} |
 {{- end}}
 {{else}}
-_None_
+_No Results_
 {{end}}
 
 {{- end}}

@@ -110,6 +110,7 @@ func (c *Context) findEnums() {
 			m[t] = append(m[t], constant)
 			t.IsEnum = true
 			constant.IsEnumerator = true
+			constant.EnumType = t
 		} else {
 			c.NotEnums = append(c.NotEnums, constant)
 		}

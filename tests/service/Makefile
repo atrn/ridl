@@ -16,4 +16,4 @@ messages.hpp : protocol.ridl $(template2) $(ridl)
 
 clean:
 	dmake clean
-	rm -f *.hpp
+	rm -f *.hpp dump.html
