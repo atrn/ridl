@@ -16,7 +16,7 @@ var (
 	typeMap map[string]TypeMap
 
 	defaultTypeMap = []TypeMap{
-		{"byte", "byte", false},
+		{"byte", "std::byte", false},
 		{"error", "std::runtime_error", true},
 		{"string", "std::string", true},
 		{"float32", "float", false},
