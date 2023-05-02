@@ -18,34 +18,6 @@ import (
 	"unicode"
 )
 
-func mapGoToCpp(goType string) (string, bool) {
-	switch goType {
-	case "byte":
-		return "std::byte", false
-	case "error":
-		return "std::runtime_error", true
-	case "string":
-		return "std::string", true
-	case "float32":
-		return "float", false
-	case "float64":
-		return "double", false
-	case "rune":
-		return "uint32_t", false
-	case "bool":
-		return "bool", false
-	case "float":
-		return "double", false
-	case "int":
-		return "int", false
-	case "uint":
-		return "unsigned int", false
-	case "int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64":
-		return goType + "_t", false
-	}
-	return goType, false
-}
-
 var (
 	arrayDimensionsPattern = regexp.MustCompile("^\\[(.*)\\](.*)")
 	mapKeyValuePattern     = regexp.MustCompile("^map\\[(.*)\\](.*)")

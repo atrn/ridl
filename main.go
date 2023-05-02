@@ -41,6 +41,8 @@ func main() {
 	versionFlag := flag.Bool("version", false, "output version and exit")
 	flag.Var(templateNames, "t", "generate output using `template`")
 	flag.Var(templateDirs, "T", "search for templates in `dir`")
+	typeMapFlag := flag.String("typemap", "", "type mapping `filename`")
+	writeTypeMapFlag := flag.Bool("write-typemap", false, "output type mapping JSON and exit")
 
 	if s := os.Getenv("RIDLPATH"); s != "" {
 		*templateDirs = filepath.SplitList(s)
@@ -50,6 +52,19 @@ func main() {
 
 	if *versionFlag {
 		fmt.Print(versionNumber)
+		os.Exit(0)
+	}
+
+	initTypeMap()
+
+	if *typeMapFlag != "" {
+		if err := readTypeMap(*typeMapFlag); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if *writeTypeMapFlag {
+		writeTypeMap(os.Stdout)
 		os.Exit(0)
 	}
 

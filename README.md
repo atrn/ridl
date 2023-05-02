@@ -86,6 +86,10 @@ Write output to _filename_.  The _filename_ `-` represents the
 standard output.
 - -D _directory_  
 Read template files from _directory_.
+- -typemap _filename_  
+Read type map definitions from _filename_. See **Type Maps* below.
+- -write-typemap  
+Output the JSON-encoded type map to stdout and exit.
 - -version  
 Output ridl version and exit.
 - -debug  
@@ -224,3 +228,68 @@ Returns the C++ type to be used as a function result.
 TBD.
 #### decap
 Converts any leading capital letter in a string to lower case.
+
+### Type Maps
+
+The `cpptype` template function maps a Go type to an equivalent C++
+type. Standard Go types are mapped as per the following table,
+
+| Go Type   | C++ Type             |
+|:----------|:---------------------|
+| byte      | std::byte            |
+| error     | std::runtime\_error  |
+| string    | std::string          |
+| float32   | float                |
+| float64   | double               |
+| rune      | uint32\_t            |
+| bool      | bool                 |
+| int       | int                  |
+| uint      | unsigned int         |
+| float     | float32              |
+| int8      | int8\_t              |
+| uint8     | uint8\_t             |
+| int16     | int16\_t             |
+| uint16    | uint16\_t            |
+| int32     | int32\_t             |
+| uint32    | uint32\_t            |
+| int64     | int64\_t             |
+| uint64    | int64\_t             |
+| uintptr   | ptrdiff\_t           |
+| complex32 | std::complex<float>  |
+| complex64 | std::complex<double> |
+
+Note, the `int` and `float` Go types represent the types of the so-called
+_untyped constants_.
+
+Users may override the default mapping or define extra mappings via a _type
+map file_, a JSON encoded structure that defines the mapping from a Go type
+to a C++ type.
+
+A type map contains a, JSON, array of mappings where each mapping is a
+dictionary the the keys
+
+- `go-type`  
+the type's name as used in Go
+- `cpp-type`  
+the corresponding C++ type name
+- `pass-by-ref`  
+a flag indicating if values of the type should be passed by reference
+
+
+```json
+[
+    {
+        "go-type": "Timepoint",
+        "cpp-type": "std::chrono::steady_clock::timepoint",
+        "pass-by-ref": false
+    },
+    {
+        "go-type": "StringMap",
+        "cpp-type": "std::map<std::string, std::string>",
+        "pass-by-ref": true
+    }
+]
+```
+
+The `-write-typemap` flag can be used to output the default, JSON-encoded,
+type map which may be used to tailor the desired type map.
