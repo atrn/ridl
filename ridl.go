@@ -107,7 +107,7 @@ func getOutputWriter(filename string) (io.WriteCloser, error) {
 	}
 	w, err := os.Create(filename)
 	if err != nil {
-		return nil, fmt.Errorf("%q: %w", outputFilename, err)
+		return nil, fmt.Errorf("%q: %w", *outputFilename, err)
 	}
 	return w, nil
 }
