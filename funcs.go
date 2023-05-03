@@ -172,8 +172,8 @@ func divide(a, b int) int {
 	return a / b
 }
 
-func sizeof(t types.Type) int64 {
-	return Sizer.Sizeof(t)
+func sizeof(t types.Type) int {
+	return int(Sizer.Sizeof(t))
 }
 
 func trimprefix(s, p string) string {
