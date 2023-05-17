@@ -29,7 +29,11 @@ enum class {{.Type.Name}} : {{.Type.TypeName}}
         {{end}}
     {{- else if .IsTypedef -}}
         {{- if not .IsEnum}}
+        {{- if .IsPointer }}
+        using {{.Name}} = std::optional<{{cpptype .TypeName}}>;
+        {{- else -}}
         using {{.Name}} = {{cpptype .TypeName}};
+        {{- end}}
         {{- end}}
     {{- else if .IsArray -}}
         {{if .IsVariableLength}}
@@ -41,7 +45,11 @@ enum class {{.Type.Name}} : {{.Type.TypeName}}
         struct {{.Name}}
         {
         {{- range .Fields -}}
+            {{- if ispointer .Type }}
+            std::optional<{{cpptype .TypeName | deref | cpptype}}> _{{decap .Name}};
+            {{- else}}
             {{- cpptype .TypeName}} _{{decap .Name}};
+            {{- end}}
         {{- end -}}
         };
     {{- else if .IsMap -}}

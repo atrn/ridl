@@ -179,28 +179,38 @@ func (decl *ConstDecl) ExactValue() string {
 
 //  ================================================================
 
-// A TypedefDecl records a type alias formed by a type declaration
+// A TypedefDecl records a type definition formed by a type declaration
 // of the form "type <identifier> <identifier>".
 //
 // If IsEnum is true the type is used as a Go-style enum and
 // appears in the Enums slice.
-//
 type TypedefDecl struct {
 	decl
-	typedef *types.Basic
-	IsEnum  bool
+	typedef   *types.Basic
+	IsEnum    bool
+	IsPointer bool
 }
 
-// NewTypedefDecl returns a new TypdefDecl with the given
-// name and aliased type.
+// NewTypedefDecl returns a new TypdefDecl with the given name and aliased
+// type.
 func NewTypedefDecl(pkg *Package, obj types.Object, typedef *types.Basic) *TypedefDecl {
-	return &TypedefDecl{decl{pkg, obj, DeclKindTypedef}, typedef, false}
+	return &TypedefDecl{decl{pkg, obj, DeclKindTypedef}, typedef, false, false}
+}
+
+// Helper method to make newly created TypedefDecl values as pointers.
+func (decl *TypedefDecl) MarkedAsPointer() *TypedefDecl {
+	decl.IsPointer = true
+	return decl
 }
 
 // Type returns the receiver's type, the alias part of
 // the type declaration.
 func (decl *TypedefDecl) TypeName() string {
-	return decl.typedef.String()
+	prefix := ""
+	if decl.IsPointer {
+		prefix = "*"
+	}
+	return prefix + decl.typedef.String()
 }
 
 //  ================================================================
@@ -294,6 +304,10 @@ func NewStructField(pkg *Package, obj types.Object, offset, alignment int64) *St
 
 func (sf *StructField) Name() string {
 	return sf.Object.Name()
+}
+
+func (sf *StructField) Type() types.Type {
+	return sf.Object.Type()
 }
 
 func (sf *StructField) Offset() int {
@@ -465,6 +479,8 @@ func makeDecl(pkg *Package, obj *types.TypeName) Decl {
 		return NewArrayDecl(pkg, obj, getTypeName(t.Elem()), t.Elem().Underlying())
 	case *types.Map:
 		return NewMapDecl(pkg, obj, t.Key(), t.Elem())
+	case *types.Pointer:
+		return NewTypedefDecl(pkg, obj, t.Elem().(*types.Basic)).MarkedAsPointer()
 	default:
 		panic(fmt.Errorf("%T: not handling in makeDecl", t))
 	}
@@ -476,6 +492,8 @@ func getTypeName(t types.Type) string {
 		return actual.Name()
 	case *types.Named:
 		return actual.Obj().Name()
+	case *types.Pointer:
+		return actual.String()
 	default:
 		panic(fmt.Errorf("getTypeName: %T", t))
 	}

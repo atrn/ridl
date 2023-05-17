@@ -1,3 +1,5 @@
+export ZEROMQ = /opt/local
+
 ridl=		../../ridl
 template1?=	types.template
 template2?=	zmq.template

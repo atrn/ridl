@@ -28,6 +28,11 @@ type Image struct {
 
 type ImageID uint64
 
+type MaybeError struct {
+	Result uint32
+	Error  *string
+}
+
 type Service interface {
 	Noop()
 	Reset()

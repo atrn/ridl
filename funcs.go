@@ -136,6 +136,10 @@ func isslice(t string) bool {
 	return strings.HasPrefix(t, "[]")
 }
 
+func deref(s string) string {
+	return strings.TrimPrefix(s, "*")
+}
+
 func decap(s string) string {
 	if s == "" {
 		return ""
@@ -172,6 +176,11 @@ func divide(a, b int) int {
 	return a / b
 }
 
+func ispointer(t types.Type) bool {
+	_, f := t.(*types.Pointer)
+	return f
+}
+
 func sizeof(t types.Type) int {
 	return int(Sizer.Sizeof(t))
 }
@@ -190,6 +199,7 @@ var cppTemplateFuncs = map[string]interface{}{
 	"cpptype":    cppType,
 	"dims":       dims,
 	"eltype":     eltype,
+	"ispointer":  ispointer,
 	"isslice":    isslice,
 	"add":        add,
 	"subtract":   subtract,
@@ -198,6 +208,7 @@ var cppTemplateFuncs = map[string]interface{}{
 	"restype":    resType,
 	"tolower":    tolower,
 	"decap":      decap,
+	"deref":      deref,
 	"sizeof":     sizeof,
 	"trimprefix": trimprefix,
 	"trimsuffix": trimsuffix,

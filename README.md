@@ -228,6 +228,10 @@ Returns the C++ type to be used as a function result.
 TBD.
 #### decap
 Converts any leading capital letter in a string to lower case.
+#### deref
+Removes any leading `*` from a string, typically a TypeName value.
+#### ispointer
+Returns true if the argument type is a Go pointer type.
 
 ### Type Maps
 
